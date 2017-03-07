@@ -182,7 +182,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\boost_1_58_0\boost\container\set.hpp" />
     <ClInclude Include="Algorithm.h" />
-    <ClInclude Include="Array.h" />
+    <ClInclude Include="List.h" />
     <ClInclude Include="ArrayAllocator.h" />
     <ClInclude Include="Forward.h" />
     <ClInclude Include="IndexableContainer.h" />
@@ -206,7 +206,7 @@
     <ClInclude Include="Random.h" />
     <ClInclude Include="StablePoolArray.h" />
     <ClInclude Include="PoolArray.h" />
-    <ClInclude Include="List.h" />
+    <ClInclude Include="PList.h" />
     <ClInclude Include="CallOnce.h" />
     <ClInclude Include="ClassInfo.h" />
     <ClInclude Include="DataTypes.h" />

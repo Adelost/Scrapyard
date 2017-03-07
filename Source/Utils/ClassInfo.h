@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Array.h"
+#include "List.h"
 #include "Member.h"
 
 #include <string>
@@ -24,7 +24,7 @@ public:
 	void _setTarget(void* target);
 
 private:
-	Array<Member> m_array;
+	List<Member> m_array;
 	bool m_init;
 	std::map<std::string, Member> m_map;
 	std::string m_name;

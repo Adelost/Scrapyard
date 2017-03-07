@@ -283,7 +283,7 @@
     <ClInclude Include="StaticInit.h">
       <Filter>Misc\Macros</Filter>
     </ClInclude>
-    <ClInclude Include="List.h">
+    <ClInclude Include="PList.h">
       <Filter>Tools\Containers\Arrays</Filter>
     </ClInclude>
     <ClInclude Include="IndexableContainer.h" />

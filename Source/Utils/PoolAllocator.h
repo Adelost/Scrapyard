@@ -3,7 +3,7 @@
 #include "XAssert.h"
 #include <iostream>
 
-#include "Array.h"
+#include "List.h"
 #include "Stack.h"
 #include "Memory.h"
 

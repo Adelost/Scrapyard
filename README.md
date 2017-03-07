@@ -37,8 +37,8 @@ Overview of content.
     - StaticCall - Allows code to be called automatically during the start of the program. Only to be used in .cpp files.
 - **Tools** - Various classes.
     - PoolAlloc - Allow fast allocation of objects. This is usually much faster than standard allocation using "new" and "delete".
-    - Array - Dynamic array implementation. 
-    - Queue - Array like FIFO-queue implementation. 
+    - List - Dynamic array implementation. 
+    - Queue - List like FIFO-queue implementation. 
     - StableArray - Similar to a dynamic-array, but which do not reallocate the memory address of the stored elements when growing. However, elements are not guaranteed to be stored in adjacent memory locations.
     - PoolArray - A mix between a pool allocator and a dynamic array. Elements are stored based on a index.
     - IdPoolArray - Similar to PoolArray, but elements are stored based on a id as well as index.

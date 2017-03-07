@@ -8,7 +8,7 @@ set(SOURCE_FILES
 #        Source/Utils/_WindowsConsole.cpp
 #        Source/Utils/_WindowsConsole.h
 #        Source/Utils/Algorithm.h
-        Source/Utils/Array.h
+        Source/Utils/List.h
 #        Source/Utils/ArrayAllocator.h
 #        Source/Utils/CallOnce.h
 #        Source/Utils/Cast.h
@@ -30,7 +30,7 @@ set(SOURCE_FILES
 #        Source/Utils/Inspectable.h
 #        Source/Utils/LeakDetection.cpp
 #        Source/Utils/LeakDetection.h
-#        Source/Utils/List.h
+        Source/Utils/PList.h
 #        Source/Utils/Math.cpp
 #        Source/Utils/Math.h
 #        Source/Utils/Member.cpp
