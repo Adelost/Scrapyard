@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="MainQt">
+    <file>MainQt.ico</file>
+  </qresource>
+</RCC>

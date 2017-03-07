@@ -1,0 +1,2 @@
+# Aberrant Entity Component System
+Started out inspired by Marchin Chady's description of "Stateless Behaviors" in "Theory and Practice of Game Obect Component Architecture" and Jason Gregory's description of "property-centric architecture" in Game Engine Architecture, with some improvments inspired by Artemis and Unity.
