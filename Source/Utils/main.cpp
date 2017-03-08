@@ -2,29 +2,23 @@
 #include <string>
 #include <vector>
 #include "List.h"
-
-
-std::string join(ae::List<int> list, std::string separator = ",") {
-    if (list.isEmpty()) {
-        return "";
-    }
-    std::string joined = "";
-    for (int i = 0; i < list.size() - 1; i += 1) {
-        joined += std::to_string(list[i]);
-        joined += separator;
-    }
-    joined += std::to_string(list.last());
-    return joined;
-}
-
-std::string toString(ae::List<int> list) {
-    return "[" + join(list, ", ") + "]";
-}
-
+#include "Random.h"
 
 int main() {
-    ae::List<int> a = {1, 2, 3, 4, 5};
-    std::string foo = join(a);
+    ae::List<int> list = {1, 2, 3, 4, 5};
+    list = list.filter([](int element) {
+        return element > 2;
+    });
+    list = list.filter([](int element, int index) {
+        return element > 2;
+    });
+    list;
+    ae::List<float> strList = list.map<float>([](int element) {
+        return element * ae::Random::nextFloat();
+    });
+
+    std::string foo = strList.toString();
+//    list.toString();
     return 0;
 }
 

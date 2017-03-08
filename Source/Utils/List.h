@@ -58,10 +58,6 @@ public:
         return *this;
     }
 
-    /// Initializer list constructor.
-    List(std::string str) : List() {
-    }
-
     /// Constructs an Array with an initial size of "size" elements
     /// constructed using default constructor.
     List(int size) {
@@ -104,8 +100,7 @@ public:
     }
 
     const T& operator[](int index) const {
-//        xassert_msg(isInside(index), "Index out of bounds.");
-
+        xassert_msg(isInside(index), "Index out of bounds.");
         return m_elements[index];
     }
 
@@ -263,7 +258,6 @@ public:
         int index = static_cast<int>(&m_elements[0] - &element);
         xassert_msg(isInside(index),
                     "Element do not reside inside container.");
-
         return index;
     }
 
@@ -338,6 +332,63 @@ public:
         return index >= 0 && index < count();
     }
 
+    /// Joins the elements of an array into a string.
+    std::string join(std::string separator = ",") const {
+        if (isEmpty()) {
+            return "";
+        }
+        std::string joined = "";
+        for (int i = 0; i < count() - 1; i += 1) {
+            joined += std::to_string((*this)[i]);
+            joined += separator;
+        }
+        joined += std::to_string(last());
+        return joined;
+    }
+
+    /// Returns a string representation of the list.
+    std::string toString() const {
+        return "[" + join(", ") + "]";
+    }
+
+    /// Creates a new list with all elements that
+    /// pass the test implemented by the provided
+    /// function.
+    List<T> filter(bool (* callback)(T)) {
+        List other;
+        for (int i = 0; i < size(); i += 1) {
+            const T& element = (*this)[i];
+            if (callback(element)) {
+                other.add(element);
+            }
+        }
+        return other;
+    }
+
+    List<T> filter(bool (* callback)(T, int)) {
+        List other;
+        for (int i = 0; i < size(); i += 1) {
+            const T& element = (*this)[i];
+            if (callback(element, i)) {
+                other.add(element);
+            }
+        }
+        return other;
+    }
+
+    /// Creates a new array with the results of
+    /// calling a provided function on every
+    /// element in this array.
+    template<class NEW_TYPE>
+    List<NEW_TYPE> map(NEW_TYPE (* callback)(T)) {
+        List<NEW_TYPE> other;
+        for (int i = 0; i < size(); i += 1) {
+            const T& element = (*this)[i];
+            other.add(callback(element));
+        }
+        return other;
+    }
+
 private:
     //T m_allocator;
     T* m_elements;
@@ -345,8 +396,6 @@ private:
     int m_count;
 
 public:
-#pragma region Iterator
-
     /*class Iterator
     {
     public:
@@ -423,6 +472,6 @@ public:
         return Iterator(this, m_count);
     }
 
-#pragma endregion
+
 };
 }

@@ -30,7 +30,7 @@ set(SOURCE_FILES
 #        Source/Utils/Inspectable.h
 #        Source/Utils/LeakDetection.cpp
 #        Source/Utils/LeakDetection.h
-        Source/Utils/PList.h
+#        Source/Utils/PList.h
 #        Source/Utils/Math.cpp
 #        Source/Utils/Math.h
 #        Source/Utils/Member.cpp
@@ -49,8 +49,8 @@ set(SOURCE_FILES
 #        Source/Utils/PoolPtr.h
 #        Source/Utils/Preforwards.h
 #        Source/Utils/Queue.h
-#        Source/Utils/Random.cpp
-#        Source/Utils/Random.h
+        Source/Utils/Random.cpp
+        Source/Utils/Random.h
 #        Source/Utils/RegexSearch.h
 #        Source/Utils/StablePoolArray.h
 #        Source/Utils/Stack.h
