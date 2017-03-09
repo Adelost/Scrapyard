@@ -1,6 +1,6 @@
 #include "_WindowsConsole.h"
 
-#include "windows.h"
+//#include "windows.h"
 
 namespace ae
 {
@@ -11,9 +11,9 @@ namespace ae
 
 		void updateConsole()
 		{
-			HANDLE handle;
-			handle = GetStdHandle(STD_OUTPUT_HANDLE);
-			SetConsoleTextAttribute(handle, s_currentColor + s_currentBackground * 16);
+//			HANDLE handle;
+//			handle = GetStdHandle(STD_OUTPUT_HANDLE);
+//			SetConsoleTextAttribute(handle, s_currentColor + s_currentBackground * 16);
 		}
 	}
 

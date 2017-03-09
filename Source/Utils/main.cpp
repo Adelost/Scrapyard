@@ -4,9 +4,25 @@
 #include <set>
 #include "List.h"
 #include "Random.h"
+#include "Console.h"
+
+class Bar {
+public:
+    class Car {
+    public:
+        Car() {
+            std::cout << "Foo";
+        }
+    };
+
+    static Car foo() {
+        return Car();
+    }
+};
 
 
 int main() {
+    Bar::foo();
     ae::List<int> list = {1, 2, 3, 4, 5};
     list = list.filter([](int element) {
         return element > 2;
