@@ -354,37 +354,95 @@ public:
     /// Creates a new list with all elements that
     /// pass the test implemented by the provided
     /// function.
-    List<T> filter(bool (* callback)(T)) {
-        List other;
+    template<class CALLBACK>
+    List<T> filter(CALLBACK callback) {
+        List out;
         for (int i = 0; i < size(); i += 1) {
             const T& element = (*this)[i];
             if (callback(element)) {
-                other.add(element);
+                out.add(element);
             }
         }
-        return other;
+        return out;
     }
 
-    List<T> filter(bool (* callback)(T, int)) {
-        List other;
+    template<class CALLBACK>
+    List<T> filteri(CALLBACK callback) {
+        List out;
         for (int i = 0; i < size(); i += 1) {
             const T& element = (*this)[i];
             if (callback(element, i)) {
-                other.add(element);
+                out.add(element);
             }
         }
-        return other;
+        return out;
+    }
+
+
+    /// Applies a function against an accumulator and each
+    /// value of the array (from left-to-right) to reduce
+    /// it to a single value.
+    template<class CALLBACK>
+    int reduce(CALLBACK callback) {
+        T prev = (*this)[0];
+        for (int i = 1; i < size(); i += 1) {
+            prev = callback(prev, (*this)[i]);
+        }
+        return prev;
+    }
+
+    template<class CALLBACK>
+    int reducei(CALLBACK callback) {
+        T prev = (*this)[0];
+        for (int i = 1; i < size(); i += 1) {
+            prev = callback(prev, (*this)[i], i);
+        }
+        return prev;
+    }
+
+    template<typename PREV, typename CALLBACK>
+    PREV reduce(PREV initial, CALLBACK callback) {
+        PREV prev = initial;
+        for (int i = 0; i < size(); i += 1) {
+            prev = callback(prev, (*this)[i]);
+        }
+        return prev;
+    }
+
+    template<class PREV, typename CALLBACK>
+    PREV reducei(PREV initial, CALLBACK callback) {
+        PREV prev = initial;
+        for (int i = 0; i < size(); i += 1) {
+            prev = callback(prev, (*this)[i], i);
+        }
+        return prev;
+    }
+
+    T sum() {
+        return reduce([](T prev, T curr) {
+            return prev + curr;
+        });
     }
 
     /// Creates a new array with the results of
     /// calling a provided function on every
     /// element in this array.
-    template<class NEW_TYPE>
-    List<NEW_TYPE> map(NEW_TYPE (* callback)(T)) {
-        List<NEW_TYPE> other;
+    template<class TYPE, typename CALLBACK>
+    List<TYPE> map(CALLBACK callback) {
+        List<TYPE> other;
         for (int i = 0; i < size(); i += 1) {
             const T& element = (*this)[i];
             other.add(callback(element));
+        }
+        return other;
+    }
+
+    template<class TYPE, typename CALLBACK>
+    List<TYPE> mapi(CALLBACK callback) {
+        List<TYPE> other;
+        for (int i = 0; i < size(); i += 1) {
+            const T& element = (*this)[i];
+            other.add(callback(element, i));
         }
         return other;
     }
@@ -471,7 +529,5 @@ public:
     Iterator cend() {
         return Iterator(this, m_count);
     }
-
-
 };
 }
