@@ -3,16 +3,32 @@
 #include <vector>
 #include "List.h"
 #include "Random.h"
+#include "Console.h"
+
+class Bar {
+public:
+    class Car {
+    public:
+        Car(){
+            std::cout << "Foo";
+        }
+    };
+
+    static Car foo() {
+        return Car();
+    }
+};
 
 int main() {
+    Bar::foo();
     ae::List<int> list = {1, 2, 3, 4, 5};
-    list = list.filter([](int element) {
-        return element > 2;
-    });
+
+//    list = list.each([](int element) {
+//    });
+    ae::write() << "1" << 2 << 3 << 4;
     list = list.filter([](int element, int index) {
         return element > 2;
     });
-    list;
     ae::List<float> strList = list.map<float>([](int element) {
         return element * ae::Random::nextFloat();
     });

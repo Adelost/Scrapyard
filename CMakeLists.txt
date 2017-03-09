@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(SOURCE_FILES
         Source/Utils/main.cpp
-#        Source/Utils/_WindowsConsole.cpp
-#        Source/Utils/_WindowsConsole.h
+        Source/Utils/_WindowsConsole.cpp
+        Source/Utils/_WindowsConsole.h
 #        Source/Utils/Algorithm.h
         Source/Utils/List.h
 #        Source/Utils/ArrayAllocator.h
@@ -14,8 +14,8 @@ set(SOURCE_FILES
 #        Source/Utils/Cast.h
 #        Source/Utils/ClassInfo.cpp
 #        Source/Utils/ClassInfo.h
-#        Source/Utils/Console.cpp
-#        Source/Utils/Console.h
+        Source/Utils/Console.cpp
+        Source/Utils/Console.h
 #        Source/Utils/CppParser.h
 #        Source/Utils/DataTypes.h
 #        Source/Utils/DebugOnly.h
@@ -41,7 +41,7 @@ set(SOURCE_FILES
 #        Source/Utils/Message.h
 #        Source/Utils/NativePoolArray.h
 #        Source/Utils/NonCopyable.h
-#        Source/Utils/Output.h
+        Source/Utils/Output.h
 #        Source/Utils/PoolAllocator.h
 #        Source/Utils/PoolArray.h
 #        Source/Utils/PoolArrayBase.h
@@ -58,8 +58,8 @@ set(SOURCE_FILES
 #        Source/Utils/StaticInit.h
 #        Source/Utils/StopWatch.cpp
 #        Source/Utils/StopWatch.h
-#        Source/Utils/StringConvert.cpp
-#        Source/Utils/StringConvert.h
+        Source/Utils/StringConvert.cpp
+        Source/Utils/StringConvert.h
 #        Source/Utils/StringRef.h
 #        Source/Utils/tests.cpp
 #        Source/Utils/tests.h
