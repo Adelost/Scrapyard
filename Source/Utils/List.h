@@ -30,7 +30,6 @@ public:
         m_count = 0;
         m_capacity = 0;
     }
-
     /// Move constructor.
     List(List&& other) {
         m_elements = other.m_elements;
@@ -40,24 +39,20 @@ public:
         other.m_count = 0;
         other.m_capacity = 0;
     }
-
     /// Initializer list constructor.
     List(std::initializer_list<T> list) : List() {
         reserve((int) list.size());
         addAll(list);
     }
-
     /// Constructs an Array from any iterable
     /// container.
     template<class T_Iterable>
     List(const T_Iterable& container) : List() {
         addAll(container);
     }
-
     List<T>& operator=(std::initializer_list<T> list) {
         return *this;
     }
-
     /// Constructs an Array with an initial size of "size" elements
     /// constructed using default constructor.
     List(int size) {
@@ -66,17 +61,14 @@ public:
         m_count = size;
         m_capacity = size;
     }
-
     /// Constructs a copy of "other".
     List(const List<T>& other) : List() {
         *this = other;
     }
-
     /// Destroys the container and all elements.
     ~List() {
         clearMemory();
     }
-
     /// Copies the elements of "other" to this container, replacing
     /// its current contents, and modifying its size accordingly.
     List<T>& operator=(const List<T>& other) {
@@ -85,7 +77,6 @@ public:
 
         return *this;
     }
-
     /// Same as add(), overloading stream operator allows adding
     /// multiple elements.
     List<T>& operator<<(const T& element) {
@@ -93,24 +84,20 @@ public:
 
         return *this;
     }
-
     /// Returns element at the specified index.
     T& operator[](int index) {
         return CALL_CONST_METHOD_AS_NON_CONST(operator[](index));
     }
-
     const T& operator[](int index) const {
         xassert_msg(isInside(index), "Index out of bounds.");
         return m_elements[index];
     }
-
     /// Adds an element to the container.
     void add(const T& element) {
         reserve(m_count + 1);
         Memory::construct<T>(element, m_elements[m_count]);
         m_count++;
     }
-
     /// Adds multiple element to the container from a pointer to an
     /// array.
     void addAll(const T* elements, int count) {
@@ -119,7 +106,6 @@ public:
             Memory::construct(elements[i], m_elements[m_count + i]);
         m_count += count;
     }
-
     /// Adds multiple element to the container from any iterable
     /// container.
     template<class T_Iterable>
@@ -127,19 +113,16 @@ public:
         for (const T& e : container)
             add(e);
     }
-
     /// Inserts an element at specified index. Subsequent elements are
     /// transposed to cover the resulting gap, which may be a slow
     /// operation depending of the number of elements.
     void insertAt(int index, const T& element) {
         insertAt(index, &element, 1);
     }
-
     /// Adds an uninitialized elements.
     void addRaw(int count = 1) {
         resize(m_count + count);
     }
-
     /// Same as addAt() but allows adding multiple elements.
     void insertAt(int index, const T* elements, int count) {
         // Shift elements right to create a gap
@@ -152,20 +135,17 @@ public:
             Memory::construct(elements[i], m_elements[index + i]);
         m_count += count;
     }
-
     /// Removes the last element.
     void removeLast() {
         xassert_msg(!isEmpty(), "No elements to remove.");
         last().~T();
         m_count--;
     }
-
     /// Removes element at index. Subsequent elements are transposed
     /// to cover the resulting gap. See also addAt().
     void removeAt(int index) {
         removeAt(index, 1);
     }
-
     /// Same as removeAt() but allows removing multiple elements.
     void removeAt(int index, int count) {
         xassert_msg(m_count - count >= 0, "No elements to remove.");
@@ -180,7 +160,6 @@ public:
         Memory::move(&m_elements[index + count], &m_elements[index],
                      rightSize);
     }
-
     /// Fast removal of element by swapping the last element with the
     /// element deleted.
     void swapRemove(int index) {
@@ -189,17 +168,14 @@ public:
         Memory::copy(&m_elements[m_count - 1], &m_elements[index], 1);
         m_count--;
     }
-
     /// Removes all elements.
     void clear() {
         for (int i = count() - 1; i >= 0; i--)
             m_elements[i].~T();
         m_count = 0;
     }
-
     /// Removes all elements without calling destructor.
     void clearRaw();
-
     /// Removes all elements and releases any allocated memory.
     void clearMemory() {
         clear();
@@ -208,7 +184,6 @@ public:
         m_elements = nullptr;
         m_capacity = 0;
     }
-
     /// If "size" exceeds capacity, more memory is allocated until
     /// capacity is enough to hold "size" elements.
     void reserve(int size) {
@@ -224,7 +199,6 @@ public:
             m_elements = tmp;
         }
     }
-
     /// Same as reserve(), except that the growth in capacity is
     /// limited to exactly "size" elements. This allows saving memory
     /// in some situation.
@@ -238,7 +212,6 @@ public:
             m_elements = tmp;
         }
     }
-
     /// Resized the container so that it contains "size" elements. New
     /// elements are uninitialized.
     void resize(int size) {
@@ -250,7 +223,6 @@ public:
             m_count = size;
         }
     }
-
     /// Returns the index of an element inside the container. Element
     /// must already be residing inside the container. Useful in some
     /// rare situations where an element do not know its index.
@@ -260,78 +232,63 @@ public:
                     "Element do not reside inside container.");
         return index;
     }
-
     /// Constructs element at index.
     void construct(const T& element, int index) {
         Memory::construct(element, m_elements[m_count]);
     }
-
     /// Destructs object at index.
     void destruct(int index) {
         Memory::destruct(m_elements[index]);
     }
-
     /// Returns the first item.
     T& first() {
         return CALL_CONST_METHOD_AS_NON_CONST(first());
     }
-
     const T& first() const {
         return (*this)[0];
     }
-
     /// Returns the last item.
     T& last() {
         return CALL_CONST_METHOD_AS_NON_CONST(last());
     }
-
     const T& last() const {
         return (*this)[m_count - 1];
     }
-
     /// Exposes the raw pointer storing the elements of the container.
     /// The pointer can be used to modify elements and remains valid
     /// as long as the container is not reallocated.
     T* raw() {
         return CALL_CONST_METHOD_AS_NON_CONST(raw());
     }
-
     const T* raw() const {
         return m_elements;
     }
-
     /// Returns the number of stored elements.
     int count() const {
         return m_count;
     }
-
     /// Alternative syntax for count()
     int size() const {
         return count();
     }
-
     /// Returns the number of elements the array can contain before
     /// needing to resize.
     int capacity() const {
         return m_capacity;
     }
-
     /// Returns true if array contains no elements.
     bool isEmpty() const {
         return m_count == 0;
     }
-
     /// Returns true if adding another element will cause the array to
     /// resize.
     bool isFull() const {
         return m_count >= m_capacity;
     }
-
     /// Checks if "index" is within the boundaries of the array.
     bool isInside(int index) const {
         return index >= 0 && index < count();
     }
-
     /// Joins the elements of an array into a string.
     std::string join(std::string separator = ",") const {
         if (isEmpty()) {
@@ -345,19 +302,44 @@ public:
         joined += std::to_string(last());
         return joined;
     }
-
     /// Returns a string representation of the list.
     std::string toString() const {
         return "[" + join(", ") + "]";
     }
-
+    static List<int> range(int stop) {
+        List<int> out(stop);
+        for (int i = 0; i < stop; i += 1) {
+            out.add(i);
+        }
+        return out;
+    }
+    static List<int> range(int start, int stop, int step = 1) {
+        List<int> out;
+        for (int i = start; i < stop; i += step) {
+            out.add(i);
+        }
+        return out;
+    }
+    /// A generic iterator function
+    template<class CALLBACK>
+    void each(CALLBACK callback) {
+        for (int i = 0; i < count(); i += 1) {
+            callback((*this)[i]);
+        }
+    }
+    template<class CALLBACK>
+    void eachi(CALLBACK callback) {
+        for (int i = 0; i < count(); i += 1) {
+            callback((*this)[i], i);
+        }
+    }
     /// Creates a new list with all elements that
     /// pass the test implemented by the provided
     /// function.
     template<class CALLBACK>
     List<T> filter(CALLBACK callback) {
         List out;
-        for (int i = 0; i < size(); i += 1) {
+        for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
             if (callback(element)) {
                 out.add(element);
@@ -365,11 +347,10 @@ public:
         }
         return out;
     }
-
     template<class CALLBACK>
     List<T> filteri(CALLBACK callback) {
         List out;
-        for (int i = 0; i < size(); i += 1) {
+        for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
             if (callback(element, i)) {
                 out.add(element);
@@ -377,74 +358,100 @@ public:
         }
         return out;
     }
-
-
-    /// Applies a function against an accumulator and each
-    /// value of the array (from left-to-right) to reduce
-    /// it to a single value.
-    template<class CALLBACK>
-    int reduce(CALLBACK callback) {
-        T prev = (*this)[0];
-        for (int i = 1; i < size(); i += 1) {
-            prev = callback(prev, (*this)[i]);
-        }
-        return prev;
-    }
-
-    template<class CALLBACK>
-    int reducei(CALLBACK callback) {
-        T prev = (*this)[0];
-        for (int i = 1; i < size(); i += 1) {
-            prev = callback(prev, (*this)[i], i);
-        }
-        return prev;
-    }
-
-    template<typename PREV, typename CALLBACK>
-    PREV reduce(PREV initial, CALLBACK callback) {
-        PREV prev = initial;
-        for (int i = 0; i < size(); i += 1) {
-            prev = callback(prev, (*this)[i]);
-        }
-        return prev;
-    }
-
-    template<class PREV, typename CALLBACK>
-    PREV reducei(PREV initial, CALLBACK callback) {
-        PREV prev = initial;
-        for (int i = 0; i < size(); i += 1) {
-            prev = callback(prev, (*this)[i], i);
-        }
-        return prev;
-    }
-
-    T sum() {
-        return reduce([](T prev, T curr) {
-            return prev + curr;
-        });
-    }
-
     /// Creates a new array with the results of
     /// calling a provided function on every
     /// element in this array.
+    template<typename CALLBACK>
+    List<T> map(CALLBACK callback) {
+        List<T> out;
+        for (int i = 0; i < count(); i += 1) {
+            const T& element = (*this)[i];
+            out.add(callback(element));
+        }
+        return out;
+    }
     template<class TYPE, typename CALLBACK>
     List<TYPE> map(CALLBACK callback) {
-        List<TYPE> other;
-        for (int i = 0; i < size(); i += 1) {
+        List<TYPE> out;
+        for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
-            other.add(callback(element));
+            out.add(callback(element));
         }
-        return other;
+        return out;
     }
-
-    template<class TYPE, typename CALLBACK>
-    List<TYPE> mapi(CALLBACK callback) {
-        List<TYPE> other;
-        for (int i = 0; i < size(); i += 1) {
+    template<typename CALLBACK>
+    List<T> mapi(CALLBACK callback) {
+        List<T> other;
+        for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
             other.add(callback(element, i));
         }
         return other;
+    }
+    template<class TYPE, typename CALLBACK>
+    List<TYPE> mapi(CALLBACK callback) {
+        List<TYPE> other;
+        for (int i = 0; i < count(); i += 1) {
+            const T& element = (*this)[i];
+            other.add(callback(element, i));
+        }
+        return other;
+    }
+    /// Applies a function against an accumulator and each
+    /// value of the array (from left-to-right) to reduce
+    /// it to a single value.
+    template<class CALLBACK>
+    T reduce(CALLBACK callback) {
+        T prev = (*this)[0];
+        for (int i = 1; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i]);
+        }
+        return prev;
+    }
+    template<typename PREV, typename CALLBACK>
+    PREV& reduce(PREV& initial, CALLBACK callback) {
+        PREV& prev = initial;
+        for (int i = 0; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i]);
+        }
+        return prev;
+    }
+    template<typename PREV, typename CALLBACK>
+    PREV& reduce(PREV&& initial, CALLBACK callback) {
+        PREV& prev = initial;
+        for (int i = 0; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i]);
+        }
+        return prev;
+    }
+    template<class CALLBACK>
+    T reducei(CALLBACK callback) {
+        T prev = (*this)[0];
+        for (int i = 1; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i], i);
+        }
+        return prev;
+    }
+    template<class TYPE, typename CALLBACK>
+    TYPE& reducei(TYPE& initial, CALLBACK callback) {
+        TYPE& prev = initial;
+        for (int i = 0; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i], i);
+        }
+        return prev;
+    }
+    template<class TYPE, typename CALLBACK>
+    TYPE& reducei(TYPE&& initial, CALLBACK callback) {
+        TYPE& prev = initial;
+        for (int i = 0; i < count(); i += 1) {
+            prev = callback(prev, (*this)[i], i);
+        }
+        return prev;
+    }
+    T sum() {
+        return reduce([](T prev, T curr) {
+            return prev + curr;
+        });
     }
 
 private:

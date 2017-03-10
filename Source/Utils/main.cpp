@@ -5,6 +5,7 @@
 #include "List.h"
 #include "Random.h"
 #include "Console.h"
+#include "Math.h"
 
 class Bar {
 public:
@@ -22,35 +23,37 @@ public:
 
 
 int main() {
-    Bar::foo();
-    ae::List<int> list = {1, 2, 3, 4, 5};
-    list = list.filter([](int element) {
-        return element > 2;
+    using namespace std;
+    using namespace ae;
+
+    List<int> list = List<int>::range(1000);
+    list = list.filter([](int n) {
+        return Math::isPrime(n);
     });
-//    list = list.filtert([&](int element) {
-//        return element > 2;
-//    });
-    list = list.filter([](int element) {
-        return element > 2;
+    const string& listStr = list.toString();
+    List<int> mapped = list.mapi([&](int element, int i) {
+        return element * Random::nextFloat() + list[i];
     });
-    ae::List<float> strList = list.mapi<float>([](int element, int index) {
-        return element * ae::Random::nextFloat();
+    list.eachi([&](int element, int i) {
+        return element * Random::nextFloat() + list[i];
     });
-//    std::set<int> mapped = list.reduce(std::set<int>(), [](std::set<int> prev, int curr) {
+//    set<int> uniques(list.begin(), list.end());
+//    uniques = list.reduce<set<int>>(set<int>(), [](set<int> prev, int curr) {
 //        prev.insert(curr);
 //        return prev;
 //    });
-    int mapped = list.reduce(0, [](int prev, int curr) {
-        return prev + curr;
+//    set<int> uniques;
+    list.reduce<set<int>>(set<int>(), [](set<int> prev, int curr) {
+        prev.insert(curr);
+        return prev;
     });
+//    int reduced = list.reduce(0, [](int prev, int curr) {
+//        return prev + curr;
+//    });
 
-    int mappede = list.sum();
+    int summed = list.sum();
 
-    for (int element: list) {
-
-    }
-
-    std::string foo = strList.toString();
+    string foo = mapped.toString();
 //    list.toString();
     return 0;
 }

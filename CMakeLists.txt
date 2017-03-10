@@ -31,8 +31,8 @@ set(SOURCE_FILES
 #        Source/Utils/LeakDetection.cpp
 #        Source/Utils/LeakDetection.h
 #        Source/Utils/PList.h
-#        Source/Utils/Math.cpp
-#        Source/Utils/Math.h
+        Source/Utils/Math.cpp
+        Source/Utils/Math.h
 #        Source/Utils/Member.cpp
 #        Source/Utils/Member.h
         Source/Utils/Memory.cpp
