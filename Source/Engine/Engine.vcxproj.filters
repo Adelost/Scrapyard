@@ -27,9 +27,6 @@
     <ClCompile Include="ComponentManager.cpp">
       <Filter>Component\Manager</Filter>
     </ClCompile>
-    <ClCompile Include="EntityManager.cpp">
-      <Filter>Entity\Manager</Filter>
-    </ClCompile>
     <ClCompile Include="ComponentPool.cpp">
       <Filter>Component\Storage</Filter>
     </ClCompile>
@@ -51,9 +48,6 @@
     </ClInclude>
     <ClInclude Include="FooComponent.h">
       <Filter>Component\Example</Filter>
-    </ClInclude>
-    <ClInclude Include="EntityManager.h">
-      <Filter>Entity\Manager</Filter>
     </ClInclude>
     <ClInclude Include="AbstractComponentPool.h">
       <Filter>Component\Storage</Filter>

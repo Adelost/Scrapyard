@@ -222,9 +222,6 @@
     <ClInclude Include="DataTypes.h">
       <Filter>Misc\DataTypes</Filter>
     </ClInclude>
-    <ClInclude Include="Array.h">
-      <Filter>Tools\Containers\Arrays</Filter>
-    </ClInclude>
     <ClInclude Include="PoolList.h">
       <Filter>Tools\Containers\PoolList</Filter>
     </ClInclude>
@@ -294,5 +291,6 @@
     <ClInclude Include="StaticClass.h">
       <Filter>Addons\StaticClass</Filter>
     </ClInclude>
+    <ClInclude Include="List.h" />
   </ItemGroup>
 </Project>

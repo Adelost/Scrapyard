@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "List.h"
+#include "Containers/List.h"
 #include "Random.h"
 #include "Console.h"
 #include "Math.h"
@@ -26,7 +26,8 @@ int main() {
     using namespace std;
     using namespace ae;
 
-    List<int> list = List<int>::range(1000);
+    List<int> list = List<int>::range(10);
+    std::string str = list.toString();
     list = list.filter([](int n) {
         return Math::isPrime(n);
     });
