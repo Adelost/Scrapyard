@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Containers/List.h"
-#include "Math.h"
-#include "XAssert.h"
+#include "../List.h"
+#include "../Math.h"
+#include "../Assert.h"
 
 namespace ae
 {

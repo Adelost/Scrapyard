@@ -1,6 +1,6 @@
 #include "Console.h"
 
-#include "_WindowsConsole.h"
+#include "__internal__/_WindowsConsole.h"
 
 namespace ae {
 

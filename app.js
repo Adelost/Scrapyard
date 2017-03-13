@@ -1,68 +1,95 @@
-var fs = require("fs");
-var path = require('path')
+let fs = require("fs");
+let path = require('path');
 
 // Path to WebStorm project (".idea" folder)
-var PROJECT_PATH = "D:/_Windows/Desktop/AberrantTemp";
-
-// Files to be excluded form the project
-var TARGETS = {
-    ".cdt": true,
-    "target": true
+const CMAKE_PATH = "/home/eeiijlr/Desktop/Sandbox/AberrantTemp";
+const SOURCE_PATH = CMAKE_PATH + "/Source/Utils";
+const IGNORED_FOLDERS = {
+    "__old__": false
 };
+const HARD_CODED_FILES = ["Source/main.cpp"];
 
-var folders = findFoldersToExclude(PROJECT_PATH);
-// var content = readFile("/home/eeiijlr/Source/Java/BSS/com.ericsson.bss.rmca/ui/.idea/ui.iml");
-console.log(folders);
+refreshCmake(SOURCE_PATH);
 
-function findFoldersToExclude(path) {
-    var foldersPaths = findPathsToExclude(path);
-    var folders = foldersPaths.map(function (path) {
-        return path.replace(PROJECT_PATH, "");
-    });
-    return folders;
+function refreshCmake(path) {
+    let found = findCppFiles(path)
+        .map(file => file.replace(CMAKE_PATH + "/", ""));
+    let files = HARD_CODED_FILES.concat(found);
+    setFilesInCmake(files);
+    return files;
 }
 
-function findPathsToExclude(path) {
-    var files = readFiles(path);
-    var folders = filterFolders(files);
-    var cmakeFiles = filterCmakeFiles(files);
-
-    var topFolders = findFolders(path);
-    var found = topFolders.reduce(function (total, topFolder) {
-        if (topFolder in TARGETS) {
-            return total.concat(path + "/" + topFolder);
+function setFilesInCmake(files) {
+    const CMAKE_FILE = CMAKE_PATH + "/CMakeLists.txt";
+    let lines = readFile(CMAKE_FILE)
+        .split("\n");
+    let newLines = [];
+    let i = 0;
+    // Start
+    while (true) {
+        let line = lines[i];
+        i += 1;
+        let setStart = "set(SOURCE_FILES";
+        if (line.startsWith(setStart)) {
+            newLines.push(setStart);
+            break;
         }
-        var foundChildren = findPathsToExclude(path + "/" + topFolder);
-        return total.concat(foundChildren);
-    }, []);
-    return found;
+        newLines.push(line);
+    }
+    // Set
+    for (let file of files) {
+        newLines.push("        " + file);
+    }
+    newLines.push("        )");
+    while (true) {
+        let line = lines[i];
+        i += 1;
+        if (line.endsWith(")")) {
+            break;
+        }
+    }
+    // End
+    while (i < lines.length) {
+        let line = lines[i];
+        i += 1;
+        newLines.push(line);
+    }
+    writeFile(CMAKE_FILE, newLines.join("\n"));
 }
 
-function readFiles(path) {
-    return fs.readdirSync(path);
+function findCppFiles(path) {
+    let files = readFolder(path);
+    let folders = filterFolders(files);
+    let found = filterCppFiles(files);
+    return folders.reduce((total, folder) => {
+        let found = findCppFiles(folder)
+        return total.concat(found);
+    }, found);
+}
+
+function readFolder(parentPath) {
+    return fs.readdirSync(parentPath)
+        .map(path => parentPath + "/" + path);
 }
 
 function filterFolders(files) {
-    return files.filter(function (file) {
-        return fs.lstatSync(file).isDirectory();
+    return files.filter(file => {
+        return fs.lstatSync(file).isDirectory()
+            && !(path.basename(file) in IGNORED_FOLDERS);
     });
 }
 
-function filterCmakeFiles(files) {
-    return files.filter(function (file) {
-        var ext = path.extname(file)
-        return ext === ".h" || ".cpp" //;
+function filterCppFiles(files) {
+    return files.filter(file => {
+        let ext = path.extname(file);
+        return ext === ".h" || ext == ".cpp";
     });
-}
-
-function getExcluded(content) {
-    var matches = content.match(new RegExp(EXCLUDED_START + '.*' + EXCLUDED_END, "g"));
-    var excluded = matches.map(function (match) {
-        return match.match(new RegExp(EXCLUDED_START + "(.*)" + EXCLUDED_END))[1];
-    });
-    return excluded;
 }
 
 function readFile(path) {
     return fs.readFileSync(path, {encoding: 'utf8'});
+}
+
+function writeFile(path, content) {
+    return fs.writeFileSync(path, content, {encoding: 'utf8'});
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "List.h"
-#include "../NativePoolArray.h"
+#include "../List.h"
+#include "NativePoolArray.h"
 #include "../Math.h"
 
 namespace ae

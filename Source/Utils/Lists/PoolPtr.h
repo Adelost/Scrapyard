@@ -1,7 +1,7 @@
 #pragma once
 
 #include "StablePoolArray.h"
-#include "../XAssert.h"
+#include "../Assert.h"
 
 namespace ae
 {

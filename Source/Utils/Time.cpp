@@ -4,7 +4,7 @@
 #include <iostream>
 #include <thread>
 
-#include "Containers/StopWatch.h"
+//#include "__old__/StopWatch.h"
 
 namespace ae
 {
@@ -15,10 +15,10 @@ namespace ae
 
 	void Time::busyWait(float ms)
 	{
-		StopWatch timer;
-		while (timer.timeMsFloat() < ms)
-		{
-			// Do nothing
-		}
+//		StopWatch timer;
+//		while (timer.timeMsFloat() < ms)
+//		{
+//			// Do nothing
+//		}
 	}
 }

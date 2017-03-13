@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Containers/List.h"
-#include "../Extend/Member.h"
+#include "../Introspect/Member.h"
 
 #include <string>
 #include <map>

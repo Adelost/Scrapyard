@@ -1,6 +1,6 @@
 #include "Random.h"
 
-#include "Containers/StaticInit.h"
+#include "StaticInit.h"
 
 #include <stdlib.h> // srand
 #include <time.h> // time

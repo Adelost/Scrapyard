@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../_old/Cast.h"
-#include "../Memory.h"
-#include "../XAssert.h"
+#include "Cast.h"
+#include "Memory.h"
+#include "Assert.h"
+#include "Algorithm.h"
 
 #include <initializer_list>
 #include <string>
@@ -175,11 +176,15 @@ public:
         m_count = 0;
     }
     /// Removes all elements without calling destructor.
-    void clearRaw();
+    void clearRaw(){
+        Memory::deallocate(m_elements);
+        m_elements = nullptr;
+        m_capacity = 0;
+        m_count = 0;
+    }
     /// Removes all elements and releases any allocated memory.
     void clearMemory() {
         clear();
-
         Memory::deallocate(m_elements);
         m_elements = nullptr;
         m_capacity = 0;
@@ -319,6 +324,10 @@ public:
             out.add(i);
         }
         return out;
+    }
+    /// Randomly rearrange all elements.
+    void shuffle() {
+        Algorithm::shuffle(&m_elements, count());
     }
     /// A generic iterator function
     template<class CALLBACK>

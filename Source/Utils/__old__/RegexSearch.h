@@ -40,7 +40,7 @@ public:
 		{
 			m_hasMatch = true;
 			m_match = m_smatch[0];
-			int index = m_smatch.position();
+			int index = (int)m_smatch.position();
 
 			return true;
 		}
@@ -76,7 +76,7 @@ public:
 	/// capture group, "$2" for second, and so on.
 	void format(std::string format)
 	{
-		m_match = m_smatch.format(format);
+		m_match = m_smatch.format(format.c_str());
 	}
 
 	std::string output()

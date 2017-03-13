@@ -2,10 +2,11 @@
 #include <string>
 #include <vector>
 #include <set>
-#include "Containers/List.h"
-#include "Random.h"
-#include "Console.h"
-#include "Math.h"
+#include "Utils/List.h"
+#include "Utils/Random.h"
+#include "Utils/Console.h"
+#include "Utils/Math.h"
+#include "Utils/Algorithm.h"
 
 class Bar {
 public:
@@ -26,7 +27,9 @@ int main() {
     using namespace std;
     using namespace ae;
 
+
     List<int> list = List<int>::range(10);
+    list.shuffle();
     std::string str = list.toString();
     list = list.filter([](int n) {
         return Math::isPrime(n);
