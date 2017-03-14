@@ -99,4 +99,7 @@ int Math::isPrime(int n) {
     }
     return true;
 }
+bool Math::isInfinite(double n) {
+    return std::isinf(n);
+}
 }

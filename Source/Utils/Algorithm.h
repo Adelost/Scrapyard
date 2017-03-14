@@ -15,8 +15,9 @@ public:
     /// Sorts the first elements "count" elements in ascending order.
     template<class T>
     static void sort(T* elements, int count);
-    /// Like sort(), but also preserves the relative order of elements
-    /// with equivalent values, at the cost of some performance.
+    /// Like sort, but also preserves the relative order of elements
+    /// with equivalent values, at the cost of some performance and
+    /// memory usage.
     template<class T>
     static void stableSort(T* elements, int count);
     /// Exchanges the values of the arguments.
@@ -46,7 +47,7 @@ void Algorithm::shuffle(T* elements, int count) {
 
 template<class T>
 void Algorithm::sort(T* elements, int count) {
-    std::sort<T>(elements, elements + count);
+    std::sort(elements, elements + count);
 }
 
 template<class T>

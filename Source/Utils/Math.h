@@ -36,6 +36,9 @@ public:
     static float lerp(float from, float to, float amount);
     /** Returns true if x is a prime number. */
     static int isPrime(int n);
+    /** Returns whether n is an infinity value (either positive infinity or negative infinity). */
+    static bool isInfinite(double n);
+
 
     /** Converts radians to degrees. */
     static float degrees(float radians);

@@ -3,8 +3,8 @@
 #include <cstdio> // fprintf
 
 
-int XAssert::onFailure(const char* condition, const char* file, int line,
-                       const char* msg, ...)
+int XAssert::onFailure(bool condition, const char* file, int line,
+                       const char* msg)
 {
 	// Prints info to console
 	fprintf(stderr,

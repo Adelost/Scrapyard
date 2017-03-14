@@ -44,7 +44,7 @@ public:
 template<class T>
 void Memory::copy(const T* source, T* destination, int count)
 {
-//	copyRaw(source, destination, count * sizeof(T));
+	copyRaw(source, destination, count * sizeof(T));
 }
 
 template<class T>

@@ -4,6 +4,7 @@
 #include "Memory.h"
 #include "Assert.h"
 #include "Algorithm.h"
+#include "Math.h"
 
 #include <initializer_list>
 #include <string>
@@ -175,17 +176,15 @@ public:
             m_elements[i].~T();
         m_count = 0;
     }
-    /// Removes all elements without calling destructor.
-    void clearRaw(){
-        Memory::deallocate(m_elements);
-        m_elements = nullptr;
-        m_capacity = 0;
-        m_count = 0;
-    }
     /// Removes all elements and releases any allocated memory.
     void clearMemory() {
         clear();
+        clearMemoryRaw();
+    }
+    /// Removes all elements and releases any allocated memory calling destructor.
+    void clearMemoryRaw() {
         Memory::deallocate(m_elements);
+        m_count = 0;
         m_elements = nullptr;
         m_capacity = 0;
     }
@@ -199,7 +198,7 @@ public:
                 m_capacity *= 2;
 
             T* tmp = Memory::allocate<T>(m_capacity);
-            Memory::copy(&m_elements[0], &tmp[0], m_count);
+            Memory::copy(m_elements, tmp, m_count);
             Memory::deallocate(m_elements);
             m_elements = tmp;
         }
@@ -310,24 +309,33 @@ public:
     std::string toString() const {
         return "[" + join(", ") + "]";
     }
-    static List<int> range(int stop) {
-        List<int> out;
-        out.reserveExact(stop);
-        for (int i = 0; i < stop; i += 1) {
+    /// Creates a list of numbers from  up to, but not including "stop".
+    static List<T> range(T start, T stop, T step = (T) 1) {
+        xassert_msg(!Math::isInfinite((double) (stop - start) / step), "Range cannot be infinite.");
+        int size = (int) ((stop - start) / step);
+        List<T> out;
+        out.reserve(size);
+        for (T i = start; i < stop; i += step) {
             out.add(i);
         }
         return out;
     }
-    static List<int> range(int start, int stop, int step = 1) {
-        List<int> out;
-        for (int i = start; i < stop; i += step) {
-            out.add(i);
-        }
-        return out;
+    static List<T> range(T stop) {
+        return range((T)0, stop, (T)1);
     }
     /// Randomly rearrange all elements.
     void shuffle() {
-        Algorithm::shuffle(&m_elements, count());
+        Algorithm::shuffle(m_elements, count());
+    }
+    /// Sorts elements in ascending order.
+    void sort() {
+        Algorithm::sort(m_elements, count());
+    }
+    /// Like sort, but also preserves the relative order of elements
+    /// with equivalent values, at the cost of some performance and
+    /// memory usage.
+    void stableSort() {
+        Algorithm::stableSort(m_elements, count());
     }
     /// A generic iterator function
     template<class CALLBACK>
