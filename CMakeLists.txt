@@ -41,7 +41,8 @@ set(SOURCE_FILES
         Source/Utils/Lists/Traits/IndexableContainer.h
         Source/Utils/__internal__/_WindowsConsole.cpp
         Source/Utils/__internal__/_WindowsConsole.h
-        )
+        Source/KeyHook.h
+        Source/KeyHook.cpp)
 
 
 add_executable(AberrantEngine ${SOURCE_FILES})

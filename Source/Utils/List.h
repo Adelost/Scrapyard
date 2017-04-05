@@ -198,7 +198,7 @@ public:
                 m_capacity *= 2;
 
             T* tmp = Memory::allocate<T>(m_capacity);
-            Memory::copy(m_elements, tmp, m_count);
+            Memory::copy<T>(m_elements, tmp, m_count);
             Memory::deallocate(m_elements);
             m_elements = tmp;
         }
@@ -338,14 +338,14 @@ public:
         Algorithm::stableSort(m_elements, count());
     }
     /// A generic iterator function
-    template<class CALLBACK>
-    void each(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    void each(AE_CALLBACK callback) {
         for (int i = 0; i < count(); i += 1) {
             callback((*this)[i]);
         }
     }
-    template<class CALLBACK>
-    void eachi(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    void eachi(AE_CALLBACK callback) {
         for (int i = 0; i < count(); i += 1) {
             callback((*this)[i], i);
         }
@@ -353,8 +353,8 @@ public:
     /// Creates a new list with all elements that
     /// pass the test implemented by the provided
     /// function.
-    template<class CALLBACK>
-    List<T> filter(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    List<T> filter(AE_CALLBACK callback) {
         List out;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -364,8 +364,8 @@ public:
         }
         return out;
     }
-    template<class CALLBACK>
-    List<T> filteri(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    List<T> filteri(AE_CALLBACK callback) {
         List out;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -378,8 +378,8 @@ public:
     /// Creates a new array with the results of
     /// calling a provided function on every
     /// element in this array.
-    template<typename CALLBACK>
-    List<T> map(CALLBACK callback) {
+    template<typename AE_CALLBACK>
+    List<T> map(AE_CALLBACK callback) {
         List<T> out;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -387,8 +387,8 @@ public:
         }
         return out;
     }
-    template<class TYPE, typename CALLBACK>
-    List<TYPE> map(CALLBACK callback) {
+    template<class TYPE, typename AE_CALLBACK>
+    List<TYPE> map(AE_CALLBACK callback) {
         List<TYPE> out;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -396,8 +396,8 @@ public:
         }
         return out;
     }
-    template<typename CALLBACK>
-    List<T> mapi(CALLBACK callback) {
+    template<typename AE_CALLBACK>
+    List<T> mapi(AE_CALLBACK callback) {
         List<T> other;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -405,8 +405,8 @@ public:
         }
         return other;
     }
-    template<class TYPE, typename CALLBACK>
-    List<TYPE> mapi(CALLBACK callback) {
+    template<class TYPE, typename AE_CALLBACK>
+    List<TYPE> mapi(AE_CALLBACK callback) {
         List<TYPE> other;
         for (int i = 0; i < count(); i += 1) {
             const T& element = (*this)[i];
@@ -417,48 +417,48 @@ public:
     /// Applies a function against an accumulator and each
     /// value of the array (from left-to-right) to reduce
     /// it to a single value.
-    template<class CALLBACK>
-    T reduce(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    T reduce(AE_CALLBACK callback) {
         T prev = (*this)[0];
         for (int i = 1; i < count(); i += 1) {
             prev = callback(prev, (*this)[i]);
         }
         return prev;
     }
-    template<typename PREV, typename CALLBACK>
-    PREV& reduce(PREV& initial, CALLBACK callback) {
+    template<typename PREV, typename AE_CALLBACK>
+    PREV& reduce(PREV& initial, AE_CALLBACK callback) {
         PREV& prev = initial;
         for (int i = 0; i < count(); i += 1) {
             prev = callback(prev, (*this)[i]);
         }
         return prev;
     }
-    template<typename PREV, typename CALLBACK>
-    PREV& reduce(PREV&& initial, CALLBACK callback) {
+    template<typename PREV, typename AE_CALLBACK>
+    PREV& reduce(PREV&& initial, AE_CALLBACK callback) {
         PREV& prev = initial;
         for (int i = 0; i < count(); i += 1) {
             prev = callback(prev, (*this)[i]);
         }
         return prev;
     }
-    template<class CALLBACK>
-    T reducei(CALLBACK callback) {
+    template<class AE_CALLBACK>
+    T reducei(AE_CALLBACK callback) {
         T prev = (*this)[0];
         for (int i = 1; i < count(); i += 1) {
             prev = callback(prev, (*this)[i], i);
         }
         return prev;
     }
-    template<class TYPE, typename CALLBACK>
-    TYPE& reducei(TYPE& initial, CALLBACK callback) {
+    template<class TYPE, typename AE_CALLBACK>
+    TYPE& reducei(TYPE& initial, AE_CALLBACK callback) {
         TYPE& prev = initial;
         for (int i = 0; i < count(); i += 1) {
             prev = callback(prev, (*this)[i], i);
         }
         return prev;
     }
-    template<class TYPE, typename CALLBACK>
-    TYPE& reducei(TYPE&& initial, CALLBACK callback) {
+    template<class TYPE, typename AE_CALLBACK>
+    TYPE& reducei(TYPE&& initial, AE_CALLBACK callback) {
         TYPE& prev = initial;
         for (int i = 0; i < count(); i += 1) {
             prev = callback(prev, (*this)[i], i);

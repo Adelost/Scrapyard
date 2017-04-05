@@ -1,63 +1,29 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <set>
-#include "Utils/List.h"
-#include "Utils/Random.h"
-#include "Utils/Console.h"
-#include "Utils/Math.h"
-#include "Utils/Algorithm.h"
+#include "KeyHook.h"
 
-class Bar {
-public:
-    class Car {
-    public:
-        Car() {
-            std::cout << "Foo";
-        }
-    };
-
-    static Car foo() {
-        return Car();
-    }
-};
+using namespace std;
 
 
 int main() {
-    using namespace std;
-    using namespace ae;
+    Key k = Key(12);
+
+    KeyHook::run([](KeyEvent& e) {
+//        if (e.window != "test - Notepad++") {
+//            return;
+//        }
+
+        cout << (int)e.key << endl;
+        if (e.ctrl) {
+//            KeyHook::sendKey((char) Key::ARROW_UP, e.pressed);
+
+//            KeyHook::swap(e, 'a', 'd');
 
 
-//    List<int> list = List<int>::range(0, 10, 1);
-    List<double> list = List<double>::range(0, 1, 0.01);
-    list.shuffle();
-    list.sort();
-    std::string str = list.toString();
+            KeyHook::swap(e, 'w', (unsigned char) Key::ARROW_UP);
+            KeyHook::swap(e, 'a', (unsigned char) Key::ARROW_LEFT);
+            KeyHook::swap(e, 's', (unsigned char) Key::ARROW_DOWN);
+            KeyHook::swap(e, 'd', (unsigned char) Key::ARROW_RIGHT);
+        }
+    });
+
     return 0;
-
-//    list = list.filter([](int n) {
-//        return Math::isPrime(n);
-//    });
-//    const string& listStr = list.toString();
-//    List<int> mapped = list.mapi([&](int element, int i) {
-//        return element * Random::nextFloat() + list[i];
-//    });
-//    list.eachi([&](int element, int i) {
-//        return element * Random::nextFloat() + list[i];
-//    });
-//    list.reduce<set<int>>(set<int>(), [](set<int> prev, int curr) {
-//        prev.insert(curr);
-//        return prev;
-//    });
-//
-//    int summed = list.sum();
-
-//    string foo = mapped.toString();
-//    list.toString();
-    return 0;
-}
-
-
-void fooasd() {
-    std::cout << "Hello";
 }
