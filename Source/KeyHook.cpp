@@ -10,7 +10,6 @@ using namespace std;
 
 static set<Key> s_hardwareKeys;
 static set<Key> s_virtualKeys;
-static std::function<void(Context&)> s_callback;
 
 std::string KeyHook::getActiveWindowTitle() {
 //    char wnd_title[1024];
@@ -21,7 +20,7 @@ std::string KeyHook::getActiveWindowTitle() {
 //    return title;
 }
 
-void KeyHook::run(std::function<void(Context&)> callback) {
+//void KeyHook::run(std::function<void(Context&)> callback) {
 //    s_callback = callback;
 //    HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT CALLBACK {
 //        KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*) lParam;
@@ -67,7 +66,7 @@ void KeyHook::run(std::function<void(Context&)> callback) {
 //        DispatchMessage(&msg);
 //    }
 //    UnhookWindowsHookEx(hook);
-}
+//}
 
 void KeyHook::sendKeyBlind(Key key, bool pressed) {
 //    INPUT in = {0};
@@ -82,12 +81,12 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
 }
 
 
-void KeyHook::swap(Key event, Key from) {
-    if (event.key == from) {
-        event.handled = true;
-        sendKey(to, event.pressed);
-    }
-}
+//void KeyHook::swap(Key event, Key from) {
+//    if (event.key == from) {
+//        event.handled = true;
+//        sendKey(to, event.pressed);
+//    }
+//}
 
 void KeyHook::sendKey(Key key, bool pressed) {
 //    ae::List<WORD> wordList(s_hardwareKeys);
@@ -104,7 +103,7 @@ void KeyHook::sendKey(Key key, bool pressed) {
     }
 }
 
-bool KeyHook::isPressed(Key key) {
+bool KeyHook::isKey(Key key) {
     return s_hardwareKeys.count(key) > 0;
 }
 
@@ -123,7 +122,7 @@ set<Key> KeyHook::unsetModKeys() {
 
 void KeyHook::extractIfPressed(set<Key>& out, Key key) {
     Key keyCode = key;
-    if (isPressed(key)) {
+    if (isKey(key)) {
         out.insert(keyCode);
         s_hardwareKeys.erase(keyCode);
     }
@@ -138,6 +137,25 @@ void KeyHook::sendKeysBlind(std::set<Key> keys, bool pressed) {
 set<Key> KeyHook::getVirtualKeys() {
     return s_virtualKeys;
 }
-bool Context::isPressed(Key key1) {
-    KeyHook::isPressed(key);
+
+
+bool Condition::call(KeyHook& hook) {
+    if (m_keys.size() > 0) {
+        for (Key key : m_keys) {
+            if (!hook.isKey(key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return m_callback();
+}
+void Action::call(KeyHook& hook) {
+    if (m_keys.size() > 0) {
+        for (Key key : m_keys) {
+            if (!hook.isKey(key)) {
+            }
+        }
+    }
+    m_callback();
 }
