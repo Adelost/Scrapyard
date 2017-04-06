@@ -18,25 +18,44 @@ enum class Key {
     RALT = 165
 };
 
-struct KeyEvent {
-    Key key;
+class Context {
+public:
+    Context(KeyHook hook) {
+        m_hook = hook;
+    }
     bool pressed;
     bool ctrl;
     bool shift;
     bool alt;
     bool handled;
     std::string window;
-    bool isPressed(Key key1);
+
     std::string callpath;
+
+    bool key(Key key) { m_hook.isPressed(key) };
+
+    void condition(std::function<void(Context&)> callback, std::function<void(bool on)> action) {
+
+    }
+private:
+    KeyHook m_hook;
+
+};
+
+class Action {
+public:
+    void action(std::function<void(bool on)> action) {
+
+    }
 };
 
 
 class KeyHook {
 public:
-    static void run(std::function<void(KeyEvent&)> callback);
+    void run(std::function<void(Context&)> callback);
     static std::string getActiveWindowTitle();
     static void sendKey(Key key, bool pressed);
-    static void swap(KeyEvent& event, Key from, Key to);
+    static void swap(Key event, Key from);
     static bool isPressed(Key key);
     static std::set<Key> unsetModKeys();
     static void extractIfPressed(std::set<Key>& out, Key key);
