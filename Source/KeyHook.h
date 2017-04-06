@@ -4,16 +4,6 @@
 #include <functional>
 #include <set>
 
-struct KeyEvent {
-    unsigned char key;
-    bool pressed;
-    bool ctrl;
-    bool shift;
-    bool alt;
-    bool handled;
-    std::string window;
-};
-
 enum class Key {
     ARROW_LEFT = 37,
     ARROW_UP = 38,
@@ -28,17 +18,31 @@ enum class Key {
     RALT = 165
 };
 
+struct KeyEvent {
+    Key key;
+    bool pressed;
+    bool ctrl;
+    bool shift;
+    bool alt;
+    bool handled;
+    std::string window;
+    bool isPressed(Key key1);
+    std::string callpath;
+};
+
+
 class KeyHook {
 public:
-    static void run(std::function<void (KeyEvent&)> callback);
+    static void run(std::function<void(KeyEvent&)> callback);
     static std::string getActiveWindowTitle();
-    static void sendKey(unsigned char key, bool pressed);
-    static void swap(KeyEvent& event, unsigned char from, unsigned char to);
+    static void sendKey(Key key, bool pressed);
+    static void swap(KeyEvent& event, Key from, Key to);
     static bool isPressed(Key key);
-    static std::set<unsigned char> unsetModKeys();
-    static void extractIfPressed(std::set<unsigned char>& out, Key key);
-    static void setKeys(const std::set<unsigned char>& keys);
-    static void sendKeyBlind(unsigned char key, bool pressed);
-    static void sendKeysBlind(std::set<unsigned char> keys, bool pressed);
+    static std::set<Key> unsetModKeys();
+    static void extractIfPressed(std::set<Key>& out, Key key);
+    static void setKeys(const std::set<Key>& keys);
+    static void sendKeyBlind(Key key, bool pressed);
+    static void sendKeysBlind(std::set<Key> keys, bool pressed);
+    static std::set<Key> getVirtualKeys();
 };
 
