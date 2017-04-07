@@ -151,11 +151,14 @@ bool Condition::call(KeyHook& hook) {
     return m_callback();
 }
 void Action::call(KeyHook& hook) {
-    if (m_keys.size() > 0) {
-        for (Key key : m_keys) {
-            if (!hook.isKey(key)) {
+    m_hook = &hook;
+    m_callback();
+}
+Action::Action(std::initializer_list<Key> keys) {
+    m_callback = [=] {
+        for (Key key : keys) {
+            if (!m_hook->isKey(key)) {
             }
         }
-    }
-    m_callback();
+    };
 }

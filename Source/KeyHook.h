@@ -63,25 +63,18 @@ private:
 
 class Action {
 public:
-    Action() {
-
+    Action() {}
+    Action(Key key) : Action({key}) {
     }
     Action(std::function<void()> callback) {
         m_callback = callback;
     }
-//    Action(void (* callback)()) {
-//        m_callback = callback;
-//    }
-    Action(std::initializer_list<Key> keys) {
-        m_keys = keys;
-    }
-    Action(Key key) {
-        m_keys = {key};
-    }
+    Action(std::initializer_list<Key> keys);
+
     void call(KeyHook& hook);
 private:
     std::function<void()> m_callback;
-    std::initializer_list<Key> m_keys;
+    KeyHook* m_hook;
 };
 
 
@@ -99,7 +92,7 @@ private:
     std::set<Key> getVirtualKeys();
 
 protected:
-    virtual void update() = 0;
+    virtual void script() = 0;
     void on(Condition given, Action then, Action otherwise = Action()) {
     }
 

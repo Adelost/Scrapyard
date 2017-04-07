@@ -5,7 +5,7 @@ using namespace std;
 
 class MyKeyHook : public KeyHook {
 protected:
-    void update() {
+    void script() {
         on(Key::LCTRL, Action([&] {
             on(Key('w'), Key('w'));
             on(Key('a'), Key('a'));
@@ -16,6 +16,8 @@ protected:
             on(Key('a'), Key::ARROW_LEFT);
             on(Key('s'), Key::ARROW_DOWN);
             on(Key('d'), Key::ARROW_RIGHT);
+            on(Condition([] { return true; }), Key::LCTRL);
+
         }));
     }
 };
