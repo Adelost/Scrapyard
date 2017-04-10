@@ -1,21 +1,26 @@
 #include "KeyHook.h"
-#include <Windows.h>
 #include <ctype.h>
-
 #include "Utils/List.h"
+#include <set>
+
+#ifdef _WINDOWS_
+#include <Windows.h>
+#endif
 
 using namespace std;
 
-#include <set>
-
 
 std::string getActiveWindow() {
+#if _WINDOWS_
     char wnd_title[1024];
     HWND hwnd = GetForegroundWindow();
     GetWindowTextA(hwnd, wnd_title, sizeof(wnd_title));
     std::string path(wnd_title);
     string title = path.substr(path.find_last_of("\\/") + 1, string::npos);
     return title;
+#else
+    return "";
+#endif
 }
 
 bool startsWith(string str, string prefix) {
@@ -32,6 +37,7 @@ bool startsWith(string str, string prefix) {
 
 
 void KeyHook::sendKeyBlind(Key key, bool pressed) {
+#if _WINDOWS_
     INPUT in = {0};
     in.type = INPUT_KEYBOARD;
     in.ki.dwExtraInfo = 0;
@@ -40,20 +46,11 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
     }
     in.ki.wVk = (WORD) toupper((int) key);
     SendInput(1, &in, sizeof(INPUT));
+#endif
     cout << ": " << (unsigned char) key << " " << pressed << endl;
 }
 
-
-//void KeyHook::swap(Key event, Key from) {
-//    if (event.key == from) {
-//        event.handled = true;
-//        sendKey(to, event.pressed);
-//    }
-//}
-
 void KeyHook::sendKey(Key key) {
-//    ae::List<WORD> wordList(s_hardwareKeys);
-//    cout << wordList.toString() << endl;
     if (isPressed()) {
         auto modKeys = unsetModKeys();
         sendKeyBlind(key, true);
@@ -95,40 +92,43 @@ void KeyHook::sendKeysBlind(std::set<Key> keys, bool pressed) {
 }
 
 void KeyHook::start() {
+#if _WINDOWS_
     static KeyHook& s_this = *this;
-    HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT CALLBACK {
-        KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*) lParam;
-        bool isInjected = (p->flags & LLKHF_INJECTED) == 1;
-        if (nCode == HC_ACTION && !isInjected) {
-            bool isValid = true;
-            switch (wParam) {
-                case WM_KEYDOWN:
-                case WM_SYSKEYDOWN:
-                    s_this.m_pressed = true;
-                    break;
-                case WM_KEYUP:
-                case WM_SYSKEYUP:
-                    s_this.m_pressed = false;
-                    break;
-                default:
-                    isValid = false;
-                    break;
-            }
-            if (isValid) {
-                s_this.m_key = (Key) tolower((int) p->vkCode);
-                cout << "in: " << (unsigned char) p->vkCode << endl;
-                cout << "in: " << (int) p->vkCode << endl;
-                cout << "in: " << (int) tolower((int) p->vkCode) << endl;
-                cout << "up: " << toupper((int) s_this.m_key) << endl;
-                s_this.m_window = getActiveWindow();
-                s_this.preScript();
-                s_this.script();
-                if (s_this.m_handled) {
-                    return 1;
+    HHOOK
+            hook = SetWindowsHookEx(WH_KEYBOARD_LL, [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT
+    CALLBACK {
+            KBDLLHOOKSTRUCT * p = (KBDLLHOOKSTRUCT*) lParam;
+            bool isInjected = (p->flags & LLKHF_INJECTED) == 1;
+            if (nCode == HC_ACTION && !isInjected) {
+                bool isValid = true;
+                switch (wParam) {
+                    case WM_KEYDOWN:
+                    case WM_SYSKEYDOWN:
+                        s_this.m_pressed = true;
+                        break;
+                    case WM_KEYUP:
+                    case WM_SYSKEYUP:
+                        s_this.m_pressed = false;
+                        break;
+                    default:
+                        isValid = false;
+                        break;
+                }
+                if (isValid) {
+                    s_this.m_key = (Key) tolower((int) p->vkCode);
+                    cout << "in: " << (unsigned char) p->vkCode << endl;
+                    cout << "in: " << (int) p->vkCode << endl;
+                    cout << "in: " << (int) tolower((int) p->vkCode) << endl;
+                    cout << "up: " << toupper((int) s_this.m_key) << endl;
+                    s_this.m_window = getActiveWindow();
+                    s_this.preScript();
+                    s_this.script();
+                    if (s_this.m_handled) {
+                        return 1;
+                    }
                 }
             }
-        }
-        return CallNextHookEx(nullptr, nCode, wParam, lParam);
+            return CallNextHookEx(nullptr, nCode, wParam, lParam);
     }, 0, 0);
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -136,6 +136,7 @@ void KeyHook::start() {
         DispatchMessage(&msg);
     }
     UnhookWindowsHookEx(hook);
+#endif
 }
 void KeyHook::debug(Key key, bool pressed) {
     m_key = key;
@@ -159,9 +160,10 @@ bool Condition::call(KeyHook& hook) {
     return m_callback();
 }
 Condition::Condition(std::initializer_list<Key> keys) {
+    Condition* lthis = this;
     m_callback = [=]() {
         for (Key key : keys) {
-            if (!m_hook->isKey(key)) {
+            if (!lthis->m_hook->isKey(key)) {
                 return false;
             }
         }
@@ -179,9 +181,10 @@ void Action::call(KeyHook& hook, std::string path) {
     m_callback();
 }
 Action::Action(std::initializer_list<Key> keys) {
+    Action* lthis = this;
     m_callback = [=] {
         for (Key key : keys) {
-            m_hook->sendKey(key);
+            lthis->m_hook->sendKey(key);
         }
     };
 }
