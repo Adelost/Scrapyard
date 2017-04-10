@@ -65,12 +65,10 @@ public:
     Condition(std::initializer_list<Key> keys);
     Condition(Key key) : Condition({key}) {}
     Condition(Window window);
-    bool call(KeyHook& hook);
+    bool call();
 
 private:
-    KeyHook* m_hook = nullptr;
     std::function<bool()> m_callback;
-
 };
 
 class Action {
@@ -81,7 +79,7 @@ public:
         m_callback = callback;
     }
     Action(std::initializer_list<Key> keys);
-    void call(KeyHook& hook, std::string path);
+    void call(std::string path);
     bool isActive(std::string path) {
         for (int i = 0; i < path.length(); i += 1) {
 
@@ -91,7 +89,6 @@ public:
     bool withinPath(std::string path);
 
 private:
-    KeyHook* m_hook = nullptr;
     std::function<void()> m_callback = [] {};
     std::string m_path = "";
 };
@@ -102,7 +99,7 @@ public:
     void track(const Action action) {
         if (!isActive(action)) {
             m_active.push_back(action);
-            std::cout << "tracked: " << action.path() << std::endl;
+//            std::cout << "tracked: " << action.path() << std::endl;
         }
     }
     void unTrack(KeyHook& hook, std::string path);
@@ -151,15 +148,15 @@ protected:
     virtual void script() = 0;
     void on(Condition given, Action then, Action otherwise = Action()) {
         std::string path = m_callPath;
-        if (given.call(*this)) {
+        if (given.call()) {
             m_actionTracker.unTrack(*this, path + "2");
             m_callPath += "1";
-            then.call(*this, m_callPath);
+            then.call(m_callPath);
             m_actionTracker.track(then);
         } else {
             m_actionTracker.unTrack(*this, path + "1");
             m_callPath += "2";
-            otherwise.call(*this, m_callPath);
+            otherwise.call(m_callPath);
             m_actionTracker.track(otherwise);
         }
         m_callPath = path + "0";

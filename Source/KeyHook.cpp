@@ -23,6 +23,8 @@ std::string getActiveWindow() {
 #endif
 }
 
+static KeyHook* s_hook;
+
 bool startsWith(string str, string prefix) {
     if (str.length() < prefix.length()) {
         return false;
@@ -51,6 +53,7 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
 }
 
 void KeyHook::sendKey(Key key) {
+    std::cout << "code:" << (int) key << endl;
     if (isPressed()) {
         auto modKeys = unsetModKeys();
         sendKeyBlind(key, true);
@@ -92,8 +95,8 @@ void KeyHook::sendKeysBlind(std::set<Key> keys, bool pressed) {
 }
 
 void KeyHook::start() {
+    s_hook = this;
 #if _WINDOWS_
-    static KeyHook& s_this = *this;
     HHOOK
             hook = SetWindowsHookEx(WH_KEYBOARD_LL, [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT
     CALLBACK {
@@ -104,26 +107,26 @@ void KeyHook::start() {
                 switch (wParam) {
                     case WM_KEYDOWN:
                     case WM_SYSKEYDOWN:
-                        s_this.m_pressed = true;
+                        s_hook->m_pressed = true;
                         break;
                     case WM_KEYUP:
                     case WM_SYSKEYUP:
-                        s_this.m_pressed = false;
+                        s_hook->m_pressed = false;
                         break;
                     default:
                         isValid = false;
                         break;
                 }
                 if (isValid) {
-                    s_this.m_key = (Key) tolower((int) p->vkCode);
+                    s_hook->m_key = (Key) tolower((int) p->vkCode);
                     cout << "in: " << (unsigned char) p->vkCode << endl;
                     cout << "in: " << (int) p->vkCode << endl;
                     cout << "in: " << (int) tolower((int) p->vkCode) << endl;
-                    cout << "up: " << toupper((int) s_this.m_key) << endl;
-                    s_this.m_window = getActiveWindow();
-                    s_this.preScript();
-                    s_this.script();
-                    if (s_this.m_handled) {
+                    cout << "up: " << toupper((int) s_hook->m_key) << endl;
+                    s_hook->m_window = getActiveWindow();
+                    s_hook->preScript();
+                    s_hook->script();
+                    if (s_hook->m_handled) {
                         return 1;
                     }
                 }
@@ -139,6 +142,7 @@ void KeyHook::start() {
 #endif
 }
 void KeyHook::debug(Key key, bool pressed) {
+    s_hook = this;
     m_key = key;
     m_pressed = pressed;
     m_window = "debug";
@@ -146,6 +150,7 @@ void KeyHook::debug(Key key, bool pressed) {
     script();
 }
 void KeyHook::preScript() {
+    s_hook = this;
     m_handled = false;
     m_callPath = "";
     if (m_pressed) {
@@ -155,15 +160,14 @@ void KeyHook::preScript() {
     }
 }
 
-bool Condition::call(KeyHook& hook) {
-    m_hook = &hook;
+bool Condition::call() {
     return m_callback();
 }
 Condition::Condition(std::initializer_list<Key> keys) {
-    Condition* lthis = this;
-    m_callback = [=]() {
-        for (Key key : keys) {
-            if (!lthis->m_hook->isKey(key)) {
+    std::vector<Key> keysCopy = keys;
+    m_callback = [keysCopy]() {
+        for (Key key : keysCopy) {
+            if (!s_hook->isKey(key)) {
                 return false;
             }
         }
@@ -172,19 +176,28 @@ Condition::Condition(std::initializer_list<Key> keys) {
 }
 Condition::Condition(Window window) {
     m_callback = [&] {
-        return m_hook->window() == window.name();
+        return s_hook->window() == window.name();
     };
 }
-void Action::call(KeyHook& hook, std::string path) {
-    m_hook = &hook;
+void Action::call(std::string path) {
     m_path = path;
     m_callback();
 }
 Action::Action(std::initializer_list<Key> keys) {
-    Action* lthis = this;
-    m_callback = [=] {
-        for (Key key : keys) {
-            lthis->m_hook->sendKey(key);
+    std::vector<Key> keysCopy = keys;
+//    std::cout << "action:";
+//    for (Key key : keysCopy) {
+//       std::cout << (unsigned char)key;
+//    }
+//    std::cout << endl;
+    m_callback = [keysCopy] {
+//        std::cout << "actioncb:";
+//        for (Key key : keysCopy) {
+//            std::cout << (unsigned char)key;
+//        }
+//        std::cout << endl;
+        for (Key key : keysCopy) {
+            s_hook->sendKey(key);
         }
     };
 }
@@ -194,9 +207,9 @@ bool Action::withinPath(string path) {
 void ActionTracker::unTrack(KeyHook& hook, std::string path) {
     for (int i = 0; i < m_active.size();) {
         if (m_active[i].withinPath(path)) {
-            m_active[i].call(hook, path);
+            m_active[i].call(path);
             m_active.erase(m_active.begin() + i);
-            cout << "untrack: " << path << endl;
+//            cout << "untrack: " << path << endl;
             continue;
         }
         i += 1;
