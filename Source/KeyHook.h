@@ -143,6 +143,8 @@ private:
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
     ActionTracker m_actionTracker;
+    bool m_debug = false;
+    bool m_injected = false;
 
 protected:
     virtual void script() = 0;
