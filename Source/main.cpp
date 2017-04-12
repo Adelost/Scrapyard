@@ -7,7 +7,7 @@ class MyKeyHook : public KeyHook {
 protected:
     void script() {
 //        int foo = (int) currentKey();
-        cout << ((unsigned char) currentKey()) << " " << isPressed() << endl;
+//        cout << ((unsigned char) currentKey()) << " " << isPressed() << endl;
 ////        on({Key('a'), Key('s')}, Action([&] {
 ////        }));
 //        on({Key('a'), Key('s')}, Key('b'));
@@ -18,22 +18,25 @@ protected:
 //        on(Key('s'), Key('s'));
 //        on(Key('d'), Key('d'));
 
-        on(Key('w'), Key::ARROW_UP);
-        on(Key('a'), Key::ARROW_LEFT);
-        on(Key('s'), Key::ARROW_DOWN);
-        on(Key('d'), Key::ARROW_RIGHT);
+        Keys foo = Ctrl + Alt + W;
+        on(Ctrl + Alt + Shift + W, ArrowUp);
 
-//        on(Key::LCTRL, Action([&] {
-//            on(Key('w'), Key('w'));
-//            on(Key('a'), Key('a'));
-//            on(Key('s'), Key('s'));
-//            on(Key('d'), Key('d'));
-//        }), Action([&] {
-//            on(Key('w'), Key::ARROW_UP);
-//            on(Key('a'), Key::ARROW_LEFT);
-//            on(Key('s'), Key::ARROW_DOWN);
-//            on(Key('d'), Key::ARROW_RIGHT);
-//        }));
+        on({Ctrl, Alt, Shift, W}, ArrowUp);
+        on(A, ArrowLeft);
+        on(S, ArrowDown);
+        on(D, ArrowRight);
+
+        on(Ctrl, Action([&] {
+            on(W, W);
+            on(A, A);
+            on(S, S);
+            on(D, D);
+        }), Action([&] {
+            on(W, ArrowUp);
+            on(A, ArrowLeft);
+            on(S, ArrowDown);
+            on(D, ArrowRight);
+        }));
     }
 };
 

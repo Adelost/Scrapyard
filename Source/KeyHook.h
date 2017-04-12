@@ -6,19 +6,60 @@
 #include <vector>
 #include <initializer_list>
 
-enum class Key {
-    ARROW_LEFT = 37,
-    ARROW_UP = 38,
-    ARROW_RIGHT = 39,
-    ARROW_DOWN = 40,
-    WINDOWS = 92,
-    LSHIFT = 160,
-    RSHIFT = 161,
-    LCTRL = 162,
-    RCTRL = 163,
-    LALT = 164,
-    RALT = 165
+
+//enum class Key {
+//    ARROW_LEFT = 37,
+//    ARROW_UP = 38,
+//    ARROW_RIGHT = 39,
+//    ARROW_DOWN = 40,
+//    WINDOWS = 92,
+//    LSHIFT = 160,
+//    RSHIFT = 161,
+//    LCTRL = 162,
+//    RCTRL = 163,
+//    LALT = 164,
+//    RALT = 165
+//};
+
+//
+//Keys operator+(const Keys& left, const Key& right) {
+//    return Keys();
+//}
+
+
+class Keys;
+
+class Key {
+public:
+    Key(char code) {
+        m_code = code;
+    }
+
+    std::vector<int> combo;
+
+private:
+    char m_code;
+
 };
+
+class Keys {
+public:
+    Keys(){};
+    std::vector list;
+};
+
+
+Keys operator+(const Key& left, const Key& right) {
+    Keys keys;
+    keys.list.push_back({left, right});
+    return keys;
+}
+
+Keys operator+(const Keys& keys, const Key& key) {
+    keys.list.push_back(key);
+    return keys;
+}
+
 
 //class Context {
 //public:
@@ -61,6 +102,8 @@ public:
     }
     Condition(std::function<bool()> callback) {
         m_callback = callback;
+    }
+    Condition(Keys keys) {
     }
     Condition(std::initializer_list<Key> keys);
     Condition(Key key) : Condition({key}) {}
@@ -129,6 +172,40 @@ public:
     std::string callPath() { return m_callPath; };
     void sendKey(Key key);
 
+    Key A = Key("a");
+    Key B = Key("b");
+    Key C = Key("c");
+    Key D = Key("d");
+    Key E = Key("e");
+    Key F = Key("f");
+    Key G = Key("g");
+    Key H = Key("h");
+    Key I = Key("i");
+    Key J = Key("j");
+    Key K = Key("k");
+    Key L = Key("l");
+    Key M = Key("m");
+    Key N = Key("n");
+    Key O = Key("o");
+    Key P = Key("p");
+    Key Q = Key("q");
+    Key R = Key("r");
+    Key S = Key("s");
+    Key T = Key("t");
+    Key U = Key("u");
+    Key V = Key("v");
+    Key W = Key("w");
+    Key X = Key("x");
+    Key Y = Key("y");
+    Key Z = Key("z");
+    Key Ctrl = Key::LCTRL;
+    Key Alt = Key::LALT;
+    Key Shift = Key::LSHIFT;
+    Key ArrowUp = Key::ARROW_UP;
+    Key ArrowLeft = Key::ARROW_LEFT;
+    Key ArrowDown = Key::ARROW_DOWN;
+    Key ArrowRight = Key::ARROW_RIGHT;
+
 private:
     void preScript();
     std::set<Key> unsetModKeys();
@@ -145,6 +222,7 @@ private:
     ActionTracker m_actionTracker;
     bool m_debug = false;
     bool m_injected = false;
+
 
 protected:
     virtual void script() = 0;
