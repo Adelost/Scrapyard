@@ -11,6 +11,7 @@
 
 using namespace std;
 
+namespace kh {
 
 std::string getActiveWindow() {
 #if _LINUX_
@@ -50,8 +51,8 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
         if (!pressed) {
             in.ki.dwFlags = KEYEVENTF_KEYUP;
         }
-        in.ki.wVk = (WORD) toupper((int) key);
-        cout << ": " << (unsigned char) key << " " << pressed << endl;
+        in.ki.wVk = (WORD) key.getCode();
+        cout << "-> " << key.toChar() << " " << pressed << endl;
         m_injected = true;
         SendInput(1, &in, sizeof(INPUT));
         m_injected = false;
@@ -59,14 +60,13 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
 #endif
 }
 
+
+
+
 void KeyHook::sendKey(Key key) {
-    if (isPressed()) {
-        auto modKeys = unsetModKeys();
-        sendKeyBlind(key, true);
-        sendKeysBlind(modKeys, true);
-    } else {
-        sendKeyBlind(key, false);
-    }
+    std::set<Key> modKeys = extractModKeys();
+    sendKeyBlind(key, isPressed());
+    insertKeys(modKeys);
     m_handled = true;
 }
 
@@ -74,24 +74,41 @@ bool KeyHook::isKey(Key key) {
     return m_hardwareKeys.count(key) > 0;
 }
 
-set<Key> KeyHook::unsetModKeys() {
-    set<Key> modSet;
-    extractIfPressed(modSet, Key::WINDOWS);
-    extractIfPressed(modSet, Key::LSHIFT);
-    extractIfPressed(modSet, Key::RSHIFT);
-    extractIfPressed(modSet, Key::LCTRL);
-    extractIfPressed(modSet, Key::RCTRL);
-    extractIfPressed(modSet, Key::LALT);
-    extractIfPressed(modSet, Key::RALT);
-    sendKeysBlind(modSet, false);
-    return modSet;
+set<Key> KeyHook::extractModKeys() {
+    set<Key> mods;
+    extractKey(mods, Key(KeyCode::LSHIFT));
+    extractKey(mods, Key(KeyCode::RSHIFT));
+    extractKey(mods, Key(KeyCode::LCTRL));
+    extractKey(mods, Key(KeyCode::RCTRL));
+    extractKey(mods, Key(KeyCode::LALT));
+    extractKey(mods, Key(KeyCode::RALT));
+    sendKeysBlind(mods, false);
+    return mods;
 }
 
-void KeyHook::extractIfPressed(set<Key>& out, Key key) {
+set<Key> KeyHook::getModKeys() {
+    set<Key> mods;
+    getKey(mods, Key(KeyCode::LSHIFT));
+    getKey(mods, Key(KeyCode::RSHIFT));
+    getKey(mods, Key(KeyCode::LCTRL));
+    getKey(mods, Key(KeyCode::RCTRL));
+    getKey(mods, Key(KeyCode::LALT));
+    getKey(mods, Key(KeyCode::RALT));
+    return mods;
+}
+
+void KeyHook::extractKey(set<Key>& out, Key key) {
     Key keyCode = key;
     if (isKey(key)) {
         out.insert(keyCode);
         m_hardwareKeys.erase(keyCode);
+    }
+}
+
+void KeyHook::getKey(set<Key>& out, Key key) {
+    Key keyCode = key;
+    if (isKey(key)) {
+        out.insert(keyCode);
     }
 }
 
@@ -124,11 +141,7 @@ void KeyHook::start() {
                     break;
             }
             if (isValid) {
-                s_hook->m_key = (Key) tolower((int) p->vkCode);
-//                cout << "in: " << (unsigned char) p->vkCode << endl;
-//                cout << "in: " << (int) p->vkCode << endl;
-//                cout << s"in: " << (int) tolower((int) p->vkCode) << endl;
-//                cout << "up: " << toupper((int) s_hook->m_key) << endl;
+                s_hook->m_currentKey = (Key) tolower((int) p->vkCode);
                 s_hook->m_window = getActiveWindow();
                 s_hook->preScript();
                 s_hook->script();
@@ -151,7 +164,7 @@ void KeyHook::start() {
 void KeyHook::debug(Key key, bool pressed) {
     s_hook = this;
     m_debug = true;
-    m_key = key;
+    m_currentKey = key;
     m_pressed = pressed;
     m_window = "debug";
     preScript();
@@ -164,9 +177,15 @@ void KeyHook::preScript() {
     m_handled = false;
     m_callPath = "";
     if (m_pressed) {
-        m_hardwareKeys.insert(m_key);
+        m_hardwareKeys.insert(m_currentKey);
     } else {
-        m_hardwareKeys.erase(m_key);
+        m_hardwareKeys.erase(m_currentKey);
+    }
+}
+void KeyHook::insertKeys(std::set<Key> keys) {
+    for(Key key : keys ){
+        m_hardwareKeys.insert(key);
+        sendKeyBlind(key, true);
     }
 }
 
@@ -174,20 +193,27 @@ bool Condition::call() {
     return m_callback();
 }
 
-Condition::Condition(std::initializer_list<Key> keys) {
-    std::vector<Key> keysCopy = keys;
-    m_callback = [keysCopy]() {
-        for (Key key : keysCopy) {
+
+Condition::Condition(Window window) {
+    m_callback = [&] {
+        return s_hook->window() == window.name();
+    };
+}
+Condition::Condition(Keys keys) {
+    m_callback = [keys] {
+        for (Key key : keys.list) {
             if (!s_hook->isKey(key)) {
                 return false;
             }
         }
+        if (!keys.isCurrentModifiers()) {
+            return false;
+        }
+        if (!keys.isCurrentKey()) {
+            cout << "Not current: " << keys.list.back().toChar() << endl;
+            return false;
+        }
         return true;
-    };
-}
-Condition::Condition(Window window) {
-    m_callback = [&] {
-        return s_hook->window() == window.name();
     };
 }
 
@@ -222,9 +248,24 @@ void ActionTracker::unTrack(KeyHook& hook, std::string path) {
         if (m_active[i].withinPath(path)) {
             m_active[i].call(path);
             m_active.erase(m_active.begin() + i);
-//            cout << "untrack: " << path << endl;
             continue;
         }
         i += 1;
     }
+}
+
+bool Keys::isCurrentKey() const {
+    if (list.empty()) {
+        return true;
+    }
+    cout << "Curr: " << list.back().toChar() << " " << s_hook->currentKey().toChar() << endl;
+    return list.back().getCode() == s_hook->currentKey().getCode();
+}
+bool Keys::isCurrentModifiers() const {
+    set<Key> mods = s_hook->getModKeys();
+    for (Key key: list) {
+        mods.erase(key);
+    }
+    return mods.empty();
+}
 }
