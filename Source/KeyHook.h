@@ -42,6 +42,9 @@ public:
     bool operator<(const Key& right) const {
         return m_code < right.m_code;
     }
+    bool operator==(const Key& right) const {
+        return m_code == right.m_code;
+    }
 private:
     int m_code;
 };
@@ -150,7 +153,7 @@ public:
     Key currentKey() { return m_currentKey; };
     void start();
     bool isPressed() { return m_pressed; }
-    std::string window() { return m_window; }
+    std::string currentWindow() { return m_window; }
     void debug(Key key, bool pressed);
     std::string callPath() { return m_callPath; };
     void sendKey(Key key);
@@ -198,13 +201,13 @@ public:
 //    LALT = 164,
 //    RALT = 165
 
+    void sendKeyBlind(Key key, bool pressed);
 private:
     void preScript();
     std::set<Key> extractModKeys();
 
     void extractKey(std::set<Key>& out, Key key);
     void getKey(std::set<Key>& out, Key key);
-    void sendKeyBlind(Key key, bool pressed);
     void sendKeysBlind(std::set<Key> keys, bool pressed);
 
     bool m_pressed;

@@ -61,8 +61,6 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
 }
 
 
-
-
 void KeyHook::sendKey(Key key) {
     std::set<Key> modKeys = extractModKeys();
     sendKeyBlind(key, isPressed());
@@ -123,8 +121,20 @@ void KeyHook::start() {
 #if _LINUX_
 #else
     HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, [](int nCode, WPARAM wParam, LPARAM lParam) -> LRESULT CALLBACK {
+
+
         KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*) lParam;
-//        bool isInjected = (p->flags & LLKHF_INJECTED) == 1;
+        cout << "<= " << (unsigned char)tolower((int) p->vkCode) << " " << s_hook->isPressed() << endl;
+        cout << "code: " << nCode << endl;
+        cout << "param: " << wParam << endl;
+        bool isInjected = (bool)(p->flags & LLKHF_INJECTED);
+        cout << "LLKHF_EXTENDED: " << (bool)(p->flags & LLKHF_EXTENDED) << endl;
+        cout << "LLKHF_INJECTED: " << (bool)(p->flags & LLKHF_INJECTED) << endl;
+        cout << "LLKHF_ALTDOWN: " << (bool)(p->flags & LLKHF_ALTDOWN) << endl;
+
+
+        cout << "LLKHF_UP: " << (bool)(p->flags & LLKHF_UP) << endl;
+
         if (nCode == HC_ACTION && !s_hook->m_injected) {
             bool isValid = true;
             switch (wParam) {
@@ -141,17 +151,23 @@ void KeyHook::start() {
                     break;
             }
             if (isValid) {
-                s_hook->m_currentKey = (Key) tolower((int) p->vkCode);
+                s_hook->m_currentKey = tolower((int) p->vkCode);
                 s_hook->m_window = getActiveWindow();
                 s_hook->preScript();
                 s_hook->script();
-                if (s_hook->m_handled) {
-                    return 1;
-                }
             }
         }
+        if (s_hook->m_handled) {
+            cout << "#HANDLED" << endl;
+            return 1;
+        }
+        if (s_hook->m_handled) {
+            cout << "#INJECTED" << endl;
+            return 1;
+        }
+        cout << "=> " << s_hook->currentKey().toChar() << " " << s_hook->isPressed() << endl;
         return CallNextHookEx(nullptr, nCode, wParam, lParam);
-    }, 0, 0);
+    }, NULL, 0);
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         TranslateMessage(&msg);
@@ -183,7 +199,7 @@ void KeyHook::preScript() {
     }
 }
 void KeyHook::insertKeys(std::set<Key> keys) {
-    for(Key key : keys ){
+    for (Key key : keys) {
         m_hardwareKeys.insert(key);
         sendKeyBlind(key, true);
     }
@@ -196,7 +212,7 @@ bool Condition::call() {
 
 Condition::Condition(Window window) {
     m_callback = [&] {
-        return s_hook->window() == window.name();
+        return s_hook->currentWindow() == window.name();
     };
 }
 Condition::Condition(Keys keys) {
@@ -258,7 +274,7 @@ bool Keys::isCurrentKey() const {
     if (list.empty()) {
         return true;
     }
-    cout << "Curr: " << list.back().toChar() << " " << s_hook->currentKey().toChar() << endl;
+//    cout << "Curr: " << list.back().toChar() << " " << s_hook->currentKey().toChar() << endl;
     return list.back().getCode() == s_hook->currentKey().getCode();
 }
 bool Keys::isCurrentModifiers() const {
