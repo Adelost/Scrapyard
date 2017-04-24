@@ -6,39 +6,57 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-//        using namespace kh;
-//        if(currentKey() == A)
-//        {
-//            sendKeyBlind(ArrowLeft, true);
-//        }
-//        cout << currentWindow() << endl;
-//        cout << currentKey().toChar() << " " << isPressed() << endl;
-//sssssssssssssssssssssssssssssssssssssssasasas
+//        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
-
-//        on(Window("Company Of Heroes 2"), Action([&] {
-        on(T, ArrowUp);
-        on(F, ArrowLeft);
-        on(G, ArrowDown);
-        on(H, ArrowRight);
-
-        on(I, W);
-        on(J, A);
-        on(K, S);
-        on(L, D);
-//        on(Ctrl + W, W);
-//        on(Ctrl + A, A);s
-//        on(Ctrl + S, S);a
-//        on(Ctrl + D, D);
+//        on(isPressed(Ctrl), Action([&] {
+//
+////            on(isPressed(W), Action([&] { sendKey(ArrowUp); }));
+////            on(isPressed(A), ArrowLeft);
+////            on(isPressed(S), ArrowDown);
+////            on(isPressed(D), ArrowRight);
 //        }));
+
+        on(Q, A);
+        on(Q, B);
+
+
+
+
+
+//        on(T, ArrowUp);
+//        on(F, ArrowLeft);
+//        on(G, ArrowDown);
+//        on(H, ArrowRight);
+//
+//        on(Ctrl + W, W);
+//        on(Ctrl + A, A);
+//        on(Ctrl + S, S);
+//        on(Ctrl + D, D);
     }
+public:
+    void debug() {
+        spoof(Ctrl, true);
+        spoof(Ctrl, false);
+        spoof(Ctrl, true);
+        spoof(Ctrl, false);
+//        spoof(ArrowDown, true);
+//        spoof(ArrowRight, true);
+//        spoof(ArrowDown, false);
+//        spoof(ArrowRight, false);
+//
+//        spoof(S, true);
+//        spoof(D, true);
+//        spoof(S, false);
+//        spoof(D, false);
+    }
+
 };
 
 
 int main() {
     MyKeyHook hook;
     hook.start();
-//    hook.debug(Key::LCTRL, true);
+//    hook.debug();
 //    hook.debug(Key('w'), true);
 //    hook.debug(Key('e'), true);
 //    hook.debug(Key('e'), true);
