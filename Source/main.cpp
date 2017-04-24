@@ -16,8 +16,19 @@ protected:
 ////            on(isPressed(D), ArrowRight);
 //        }));
 
-        on(Q, A);
-        on(Q, B);
+//        on(S, D);
+//        on(D, R);
+
+//        on(isPressed(Ctrl), D);
+        on(Ctrl, D);
+        on(Q, D);
+
+
+//        on(isPressed(Ctrl), A);
+//        on(Ctrl, A);
+//        on(isPressed(Ctrl), B);
+//        on(Ctrl, A);
+//        on(isPressed(Ctrl), B);
 
 
 
@@ -35,10 +46,21 @@ protected:
     }
 public:
     void debug() {
+//        spoof(Q, true);
+//        spoof(Q, false);
+
         spoof(Ctrl, true);
         spoof(Ctrl, false);
-        spoof(Ctrl, true);
-        spoof(Ctrl, false);
+
+//        spoof(Ctrl, true);
+//        spoof(Ctrl, false);
+
+//        spoof(S, true);
+//        spoof(D, true);
+//        spoof(D, false);
+//        spoof(S, false);
+
+
 //        spoof(ArrowDown, true);
 //        spoof(ArrowRight, true);
 //        spoof(ArrowDown, false);
@@ -55,8 +77,10 @@ public:
 
 int main() {
     MyKeyHook hook;
-//    hook.start();
     hook.debug();
+//    hook.start();
+
+
 //    hook.debug(Key('w'), true);
 //    hook.debug(Key('e'), true);
 //    hook.debug(Key('e'), true);

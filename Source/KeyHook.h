@@ -70,9 +70,11 @@ public:
     Condition(Key key) : Condition(Keys(key)) {}
     Condition(Window window);
     int call();
+    bool captureKey() { return m_interceptKey; };
 
 private:
     std::function<int()> m_callback;
+    bool m_interceptKey = false;
 };
 
 
@@ -87,16 +89,23 @@ public:
     void call(std::string path);
     std::string path() const { return m_path; };
     bool withinPath(std::string path);
+    void captureKey();
+    void releaseKey();;
 
 private:
     std::function<void()> m_callback = [] {};
     std::string m_path = "";
+    Key m_capturedKey;
+    bool m_hasCapturedKey = false;
 };
 
 class ActionTracker {
 public:
     std::vector<Action> m_active;
-    void track(const Action action) {
+    void track(Action action, bool capture) {
+        if (capture) {
+            action.captureKey();
+        }
         if (!isActive(action)) {
             m_active.push_back(action);
         }
@@ -119,6 +128,7 @@ public:
     virtual ~KeyHook() {}
     bool isPressed(Key key);
     Key currentKey() { return m_currentKey; };
+    bool isKeyCaptured(Key key);;
     void start();
     bool isPressed() { return m_pressed; }
     std::string currentWindow() { return m_window; }
@@ -131,6 +141,8 @@ public:
 
     void sendKeyBlind(Key key, bool pressed);
 
+    void captureKey(Key key);
+    void releaseKey(Key key);
 private:
     void preScript();
     std::set<Key> extractModKeys();
@@ -146,6 +158,7 @@ private:
     Key m_currentKey = Key(0);
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
+    std::set<Key> m_capturedKeys;
     ActionTracker m_actionTracker;
     bool m_debug = false;
 
@@ -153,17 +166,18 @@ private:
 protected:
     virtual void script() = 0;
 
-    void on(Condition given, Action then, Action otherwise = Action()) {
+    void on(Condition given, Action then = Action(), Action otherwise = Action()) {
         std::string path = m_callPath;
         int callCode = given.call();
+        bool capture = given.captureKey();
         if (callCode == 1) {
             unTrack(path + "2");
             m_callPath += "1";
-            track(then);
+            track(then, capture);
         } else if (callCode == 0) {
             unTrack(path + "1");
             m_callPath += "2";
-            track(otherwise);
+            track(otherwise, false);
         }
         m_callPath = path + "0";
     }
@@ -174,14 +188,15 @@ protected:
         m_actionTracker.unTrack(*this, path);
         m_pressed = pressed;
     }
-    void track(Action action) {
+    void track(Action action, bool capture) {
         bool pressed = m_pressed;
         m_pressed = true;
         action.call(m_callPath);
-        m_actionTracker.track(action);
+        m_actionTracker.track(action, capture);
         m_pressed = pressed;
     }
     void insertKeys(std::set<Key> keys);
+    void postScript();
 };
 
 }

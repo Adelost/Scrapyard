@@ -83,15 +83,14 @@ void KeyHook::sendKeyBlind(Key key, bool pressed) {
     if (key.toStr() == "D") {
         int i = 0;
     }
-    std::cout << "-> " << key.toStr() << " " << isPressed() << std::endl;
 #endif
+    std::cout << "=> " << key.toStr() << " " << pressed << std::endl;
 }
 
 void KeyHook::sendKey(Key key) {
     std::set<Key> modKeys = extractModKeys();
     sendKeyBlind(key, isPressed());
     insertKeys(modKeys);
-    m_intercepted = true;
 }
 
 bool KeyHook::isPressed(Key key) {
@@ -106,6 +105,9 @@ std::set<Key> KeyHook::extractModKeys() {
     extractKey(mods, KeyCodes::RCtrl);
     extractKey(mods, KeyCodes::Alt);
     extractKey(mods, KeyCodes::RAlt);
+    if (m_intercepted) {
+        mods.erase(currentKey());
+    }
     sendKeysBlind(mods, false);
     return mods;
 }
@@ -159,10 +161,7 @@ void KeyHook::start() {
         s_hook->m_window = getActiveWindow();
         s_hook->preScript();
         s_hook->script();
-        if (!s_hook->m_intercepted) {
-            std::cout << "<> " << currentKey().toStr() << " " << isPressed() << std::endl;
-            interception_send(s_context, s_device, (InterceptionStroke const*) &s_stroke, 1);
-        }
+        s_hook->postScript();
     }
     interception_destroy_context(s_context);
 #endif
@@ -176,9 +175,7 @@ void KeyHook::spoof(Key key, bool pressed) {
     m_window = "debug";
     preScript();
     script();
-    if (!m_intercepted) {
-        std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
-    }
+    postScript();
     m_debug = false;
 }
 
@@ -198,6 +195,22 @@ void KeyHook::insertKeys(std::set<Key> keys) {
         sendKeyBlind(key, true);
     }
 }
+void KeyHook::captureKey(Key key) {
+    m_capturedKeys.insert(key);
+}
+void KeyHook::releaseKey(Key key) {
+    m_hardwareKeys.erase(key);
+}
+bool KeyHook::isKeyCaptured(Key key) {
+    return m_capturedKeys.count(key) > 0;
+}
+
+void KeyHook::postScript() {
+    if (!isKeyCaptured(currentKey())) {
+//        interception_send(s_context, s_device, (InterceptionStroke const*) &s_stroke, 1);
+        std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
+    }
+}
 
 
 int Condition::call() {
@@ -211,6 +224,7 @@ Condition::Condition(Window window) {
     };
 }
 Condition::Condition(Keys keys) {
+    m_interceptKey = true;
     m_callback = [keys] {
         for (Key key : keys.list) {
             if (!s_hook->isPressed(key)) {
@@ -243,10 +257,24 @@ Action::Action(Keys keys) {
 bool Action::withinPath(std::string path) {
     return startsWith(m_path, path);
 }
+void Action::captureKey() {
+    m_capturedKey = s_hook->currentKey();
+    s_hook->captureKey(m_capturedKey);
+    m_hasCapturedKey = true;
+
+}
+void Action::releaseKey() {
+    if (m_hasCapturedKey) {
+        s_hook->releaseKey(m_capturedKey);
+        m_hasCapturedKey = false;
+    }
+}
+
 void ActionTracker::unTrack(KeyHook& hook, std::string path) {
     for (int i = 0; i < m_active.size();) {
         if (m_active[i].withinPath(path)) {
             m_active[i].call(path);
+            m_active[i].releaseKey();
             m_active.erase(m_active.begin() + i);
             continue;
         }
