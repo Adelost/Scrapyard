@@ -10,6 +10,7 @@ public:
     }
     Key(int code) {
         m_code = code;
+        m_str = toStr();
     }
     std::string toStr() const {
         int code = m_code;
@@ -70,6 +71,7 @@ public:
     }
 private:
     int m_code;
+    std::string m_str;
 };
 
 class KeyCodes {

@@ -125,7 +125,7 @@ std::set<Key> KeyHook::getModKeys() {
 
 void KeyHook::extractKey(std::set<Key>& out, Key key) {
     Key keyCode = key;
-    if (isPressed(key)) {
+    if (isPressed(key) && !isKeyCaptured(key)) {
         out.insert(keyCode);
         m_hardwareKeys.erase(keyCode);
     }
