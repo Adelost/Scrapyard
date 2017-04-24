@@ -99,17 +99,16 @@ private:
     bool m_hasCapturedKey = false;
 };
 
+struct QueuedKey {
+    Key key;
+    bool pressed;
+    bool blind;
+};
+
 class ActionTracker {
 public:
     std::vector<Action> m_active;
-    void track(Action action, bool capture) {
-        if (capture) {
-            action.captureKey();
-        }
-        if (!isActive(action)) {
-            m_active.push_back(action);
-        }
-    }
+    void track(std::string callPath, Action action, bool capture);
     void unTrack(KeyHook& hook, std::string path);
     bool isActive(const Action action) {
         for (Action active: m_active) {
@@ -149,38 +148,24 @@ private:
 
     void extractKey(std::set<Key>& out, Key key);
     void getKey(std::set<Key>& out, Key key);
-    void sendKeysBlind(std::set<Key> keys, bool pressed);
+    void rawSend(std::set<Key> keys, bool pressed);
 
     bool m_pressed;
     std::string m_window;
     bool m_intercepted;
-    bool m_injected = false;
     Key m_currentKey = Key(0);
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
     std::set<Key> m_capturedKeys;
     ActionTracker m_actionTracker;
     bool m_debug = false;
+    std::vector<QueuedKey> m_sendBuffer;
 
 
 protected:
     virtual void script() = 0;
 
-    void on(Condition given, Action then = Action(), Action otherwise = Action()) {
-        std::string path = m_callPath;
-        int callCode = given.call();
-        bool capture = given.captureKey();
-        if (callCode == 1) {
-            unTrack(path + "2");
-            m_callPath += "1";
-            track(then, capture);
-        } else if (callCode == 0) {
-            unTrack(path + "1");
-            m_callPath += "2";
-            track(otherwise, false);
-        }
-        m_callPath = path + "0";
-    }
+    void on(Condition given, Action then = Action(), Action otherwise = Action());
 
     void unTrack(std::string path) {
         bool pressed = m_pressed;
@@ -191,12 +176,12 @@ protected:
     void track(Action action, bool capture) {
         bool pressed = m_pressed;
         m_pressed = true;
-        action.call(m_callPath);
-        m_actionTracker.track(action, capture);
+        m_actionTracker.track(m_callPath, action, capture);
         m_pressed = pressed;
     }
     void insertKeys(std::set<Key> keys);
     void postScript();
+    void rawSend(Key key, bool pressed);
 };
 
 }

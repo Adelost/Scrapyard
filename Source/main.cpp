@@ -6,23 +6,29 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-//        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
+        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
-//        on(isPressed(Ctrl), Action([&] {
-//
-////            on(isPressed(W), Action([&] { sendKey(ArrowUp); }));
-////            on(isPressed(A), ArrowLeft);
-////            on(isPressed(S), ArrowDown);
-////            on(isPressed(D), ArrowRight);
-//        }));
+        on(Ctrl);
+        on(!isPressed(Ctrl), Action([&] {
+            on(W);
+            on(A);
+            on(S);
+            on(D);
+            on(isPressed(W), ArrowUp);
+            on(isPressed(A), ArrowLeft);
+            on(isPressed(S), ArrowDown);
+            on(isPressed(D), ArrowRight);
+        }));
 
 //        on(S, D);
-//        on(D, R);
 
+//        on(Q);
+
+//        on(isPressed(Q), D);
 //        on(isPressed(Ctrl), D);
-        on(Ctrl, D);
-        on(Q, D);
 
+//        on(Q, D);
+//        on(S, F);
 
 //        on(isPressed(Ctrl), A);
 //        on(Ctrl, A);
@@ -46,14 +52,22 @@ protected:
     }
 public:
     void debug() {
-//        spoof(Q, true);
-//        spoof(Q, false);
+//        spoof(Ctrl, true);
 
+        spoof(W, true);
+//        spoof(W, false);
+        spoof(W, false);
         spoof(Ctrl, true);
+        spoof(W, true);
+        spoof(W, false);
         spoof(Ctrl, false);
+
 
 //        spoof(Ctrl, true);
 //        spoof(Ctrl, false);
+//
+//        spoof(Q, true);
+//        spoof(Q, false);
 
 //        spoof(S, true);
 //        spoof(D, true);
@@ -77,8 +91,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-    hook.debug();
-//    hook.start();
+//    hook.debug();
+    hook.start();
 
 
 //    hook.debug(Key('w'), true);
