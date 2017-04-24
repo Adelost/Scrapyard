@@ -1,9 +1,7 @@
 #include "KeyHook.h"
-#include <ctype.h>
 #include "Utils/List.h"
-#include <set>
 
-#ifndef _LINUX_
+#ifdef _WIN32_
 
 #include <Windows.h>
 #include <interception.h>
@@ -12,8 +10,7 @@
 
 namespace kh {
 
-#if _LINUX_
-#else
+#ifdef _WIN32_
 InterceptionKeyStroke s_stroke;
 InterceptionContext s_context;
 InterceptionDevice s_device;
@@ -49,15 +46,15 @@ void interceptionSend(Key key, bool pressed) {
 #endif
 
 std::string getActiveWindow() {
-#if _LINUX_
-    return "";
-#else
+#ifdef _WIN32_
     char wnd_title[1024];
     HWND hwnd = GetForegroundWindow();
     GetWindowTextA(hwnd, wnd_title, sizeof(wnd_title));
     std::string path(wnd_title);
     std::string title = path.substr(path.find_last_of("\\/") + 1, std::string::npos);
     return title;
+#else
+    return "";
 #endif
 }
 
@@ -77,15 +74,14 @@ bool startsWith(std::string str, std::string prefix) {
 }
 
 void KeyHook::sendKeyBlind(Key key, bool pressed) {
-#if _LINUX_
-#else
+#ifdef _WIN32_
     if (!m_debug) {
         m_injected = true;
         interceptionSend(key, pressed);
         m_injected = false;
     }
     if (key.toStr() == "D") {
-      int i = 0;
+        int i = 0;
     }
     std::cout << "-> " << key.toStr() << " " << isPressed() << std::endl;
 #endif
@@ -147,8 +143,7 @@ void KeyHook::sendKeysBlind(std::set<Key> keys, bool pressed) {
 }
 
 void KeyHook::start() {
-#if _LINUX_
-#else
+#ifdef _WIN32_
     s_context = interception_create_context();
     interception_set_filter(s_context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_ALL);
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
@@ -182,7 +177,7 @@ void KeyHook::spoof(Key key, bool pressed) {
     preScript();
     script();
     if (!m_intercepted) {
-        std::cout << "->" << currentKey().toStr() << " " << isPressed() << std::endl;
+        std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
     }
     m_debug = false;
 }

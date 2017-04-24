@@ -47,14 +47,11 @@ set(SOURCES
 
 include_directories(Libs/Interception)
 link_directories(Libs/Interception/x64)
-set(LIBS interception.lib)
+
+if (WIN32)
+    add_definitions(-D_WIN32_)
+    set(LIBS interception.lib)
+endif (WIN32)
 
 add_executable(AberrantEngine ${SOURCES})
-target_link_libraries(AberrantEngine ${LIBS} )
-
-#target_link_libraries(AberrantEngine D:/_Windows/Desktop/AberrantTemp/Interception/x64/interception.lib)
-
-#install(TARGETS AberrantEngine DESTINATION bin)
-#target_link_libraries(AberrantEngine ${CMAKE_CURRENT_SOURCE_DIR}/Interception/interception.lib)
-
-#include_directories(/Interception/libHelloDll.a)
+target_link_libraries(AberrantEngine ${LIBS})

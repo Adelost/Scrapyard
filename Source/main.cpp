@@ -55,8 +55,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-    hook.start();
-//    hook.debug();
+//    hook.start();
+    hook.debug();
 //    hook.debug(Key('w'), true);
 //    hook.debug(Key('e'), true);
 //    hook.debug(Key('e'), true);
