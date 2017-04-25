@@ -80,7 +80,7 @@ private:
 
 class Action {
 public:
-    Action() {}
+    Action() { m_empty = true; }
     Action(Key key) : Action(Keys(key)) {}
     Action(Keys keys);
     Action(std::function<void()> callback) {
@@ -97,6 +97,7 @@ private:
     std::string m_path = "";
     Key m_capturedKey;
     bool m_hasCapturedKey = false;
+    bool m_empty = false;
 };
 
 struct QueuedKey {
@@ -167,6 +168,12 @@ protected:
 
     void on(Condition given, Action then = Action(), Action otherwise = Action());
 
+    void silence(Key key) {
+        on(key);
+    }
+//    void silence( key) {
+//        on(key);
+//    }
     void unTrack(std::string path) {
         bool pressed = m_pressed;
         m_pressed = false;

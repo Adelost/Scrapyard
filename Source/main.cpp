@@ -11,13 +11,13 @@ protected:
         on(Ctrl);
         on(!isPressed(Ctrl), Action([&] {
             on(W);
-            on(A);
-            on(S);
-            on(D);
+//            on(A);
+//            on(S);
+//            on(D);
             on(isPressed(W), ArrowUp);
-            on(isPressed(A), ArrowLeft);
-            on(isPressed(S), ArrowDown);
-            on(isPressed(D), ArrowRight);
+//            on(isPressed(A), ArrowLeft);
+//            on(isPressed(S), ArrowDown);
+//            on(isPressed(D), ArrowRight);
         }));
 
 //        on(S, D);
@@ -55,7 +55,6 @@ public:
 //        spoof(Ctrl, true);
 
         spoof(W, true);
-//        spoof(W, false);
         spoof(W, false);
         spoof(Ctrl, true);
         spoof(W, true);
@@ -91,8 +90,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-//    hook.debug();
-    hook.start();
+    hook.debug();
+//    hook.start();
 
 
 //    hook.debug(Key('w'), true);

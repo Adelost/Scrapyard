@@ -225,7 +225,7 @@ void KeyHook::on(Condition given, Action then, Action otherwise) {
         m_callPath += "2";
         track(otherwise, false);
     }
-    m_callPath = path + "0";
+    m_callPath = path + "0\n";
 }
 
 
@@ -259,8 +259,10 @@ Condition::Condition(Keys keys) {
 }
 
 void Action::call(std::string path) {
-    m_path = path;
-    m_callback();
+    if (!m_empty) {
+        m_path = path;
+        m_callback();
+    }
 }
 
 Action::Action(Keys keys) {
