@@ -50,10 +50,10 @@ public:
         if (code == 157) return "RCtrl";
         if (code == 184) return "RAlt";
 
-        if (code == 200) return "Up";
-        if (code == 203) return "Left";
-        if (code == 208) return "Down";
-        if (code == 205) return "Right";
+        if (code == 200) return "ArrowUp";
+        if (code == 203) return "ArrowLeft";
+        if (code == 208) return "ArrowDown";
+        if (code == 205) return "ArrowRight";
 
         if (code == 156) return "Enter";
         if (code == 28) return "Return";
