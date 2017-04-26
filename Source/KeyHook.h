@@ -153,7 +153,6 @@ private:
 
     bool m_pressed;
     std::string m_window;
-    bool m_intercepted;
     Key m_currentKey = Key(0);
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;

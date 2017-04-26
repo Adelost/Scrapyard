@@ -162,7 +162,6 @@ void KeyHook::spoof(Key key, bool pressed) {
 
 
 void KeyHook::preScript() {
-    m_intercepted = false;
     m_callPath = "";
     if (m_pressed) {
         m_hardwareKeys.insert(m_currentKey);
@@ -177,10 +176,12 @@ void KeyHook::insertKeys(std::set<Key> keys) {
     }
 }
 void KeyHook::captureKey(Key key) {
+    std::cout << "captured: "<< key.toStr() << std::endl;
     m_capturedKeys.insert(key);
 }
 void KeyHook::releaseKey(Key key) {
-    m_hardwareKeys.erase(key);
+    std::cout << "relesed: "<< key.toStr() << std::endl;
+    m_capturedKeys.erase(key);
 }
 bool KeyHook::isKeyCaptured(Key key) {
     return m_capturedKeys.count(key) > 0;
@@ -195,6 +196,7 @@ void KeyHook::postScript() {
         }
         std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
     }
+    m_capturedKeys.clear();
     for (QueuedKey q: m_sendBuffer) {
         if (q.blind) {
             rawSend(currentKey(), isPressed());
