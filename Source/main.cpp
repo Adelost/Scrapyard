@@ -9,16 +9,16 @@ protected:
         std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
         on(Ctrl);
-        on(!isPressed(Ctrl), Action([&] {
-            on(W);
-//            on(A);
-//            on(S);
-//            on(D);
-            on(isPressed(W), ArrowUp);
-//            on(isPressed(A), ArrowLeft);
-//            on(isPressed(S), ArrowDown);
-//            on(isPressed(D), ArrowRight);
-        }));
+//        on(!isPressed(Ctrl), Action([&] {
+//            on(W);
+////            on(A);
+////            on(S);
+////            on(D);
+////            on(isPressed(W), ArrowUp);
+////            on(isPressed(A), ArrowLeft);
+////            on(isPressed(S), ArrowDown);
+////            on(isPressed(D), ArrowRight);
+//        }));
 
 //        on(S, D);
 
@@ -54,12 +54,13 @@ public:
     void debug() {
 //        spoof(Ctrl, true);
 
-        spoof(W, true);
-        spoof(W, false);
+//        spoof(W, true);
+//        spoof(W, false);
         spoof(Ctrl, true);
-        spoof(W, true);
-        spoof(W, false);
         spoof(Ctrl, false);
+//        spoof(W, true);
+//        spoof(W, false);
+
 
 
 //        spoof(Ctrl, true);

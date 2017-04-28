@@ -176,11 +176,11 @@ void KeyHook::insertKeys(std::set<Key> keys) {
     }
 }
 void KeyHook::captureKey(Key key) {
-    std::cout << "captured: "<< key.toStr() << std::endl;
+    std::cout << "captured: " << key.toStr() << std::endl;
     m_capturedKeys.insert(key);
 }
 void KeyHook::releaseKey(Key key) {
-    std::cout << "relesed: "<< key.toStr() << std::endl;
+    std::cout << "released: " << key.toStr() << std::endl;
     m_capturedKeys.erase(key);
 }
 bool KeyHook::isKeyCaptured(Key key) {
@@ -189,14 +189,14 @@ bool KeyHook::isKeyCaptured(Key key) {
 
 void KeyHook::postScript() {
     if (!isKeyCaptured(currentKey())) {
-//        std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
-//        rawSend(currentKey(), isPressed());
-        if (!m_debug) {
-            interceptionSend(currentKey(), isPressed());
+        std::cout << "=";
+        rawSend(currentKey(), isPressed());
+    } else {
+        if (!isPressed()) {
+            releaseKey(currentKey());
         }
-        std::cout << "-> " << currentKey().toStr() << " " << isPressed() << std::endl;
     }
-    m_capturedKeys.clear();
+
     for (QueuedKey q: m_sendBuffer) {
         if (q.blind) {
             rawSend(currentKey(), isPressed());
@@ -210,7 +210,9 @@ void KeyHook::postScript() {
 }
 void KeyHook::rawSend(Key key, bool pressed) {
     if (!m_debug) {
+#ifdef _WIN32_
         interceptionSend(key, pressed);
+#endif
     }
     std::cout << "=> " << key.toStr() << " " << pressed << std::endl;
 }
@@ -261,8 +263,8 @@ Condition::Condition(Keys keys) {
 }
 
 void Action::call(std::string path) {
+    m_path = path;
     if (!m_empty) {
-        m_path = path;
         m_callback();
     }
 }
@@ -296,7 +298,7 @@ void ActionTracker::unTrack(KeyHook& hook, std::string path) {
             Action active = m_active[i];
             m_active.erase(m_active.begin() + i);
             active.call(m_active[i].path());
-            active.releaseKey();
+//            active.captureKey();
             continue;
         }
         i += 1;
