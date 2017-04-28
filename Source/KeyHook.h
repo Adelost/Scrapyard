@@ -170,6 +170,12 @@ protected:
     void silence(Key key) {
         on(key);
     }
+
+    void silence(std::initializer_list<Key> keys) {
+        for (Key key : keys) {
+            silence(key);
+        }
+    }
 //    void silence( key) {
 //        on(key);
 //    }
