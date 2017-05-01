@@ -88,30 +88,28 @@ bool KeyHook::isPressed(Key key) {
 
 std::set<Key> KeyHook::extractModKeys() {
     std::set<Key> mods;
-    extractKey(mods, KeyCodes::Shift);
-    extractKey(mods, KeyCodes::RShift);
-    extractKey(mods, KeyCodes::Ctrl);
-    extractKey(mods, KeyCodes::RCtrl);
-    extractKey(mods, KeyCodes::Alt);
-    extractKey(mods, KeyCodes::RAlt);
+    for (Key key : m_hardwareKeys) {
+        if (isModKey(key)) {
+            extractKey(mods, key);
+        }
+    }
     rawSend(mods, false);
     return mods;
 }
 
 std::set<Key> KeyHook::getModKeys() {
     std::set<Key> mods;
-    getKey(mods, KeyCodes::Shift);
-    getKey(mods, KeyCodes::RShift);
-    getKey(mods, KeyCodes::Ctrl);
-    getKey(mods, KeyCodes::RCtrl);
-    getKey(mods, KeyCodes::Alt);
-    getKey(mods, KeyCodes::RAlt);
+    for (Key key : m_hardwareKeys) {
+        if (isModKey(key)) {
+            m_hardwareKeys.insert(key);
+        }
+    }
     return mods;
 }
 
 void KeyHook::extractKey(std::set<Key>& out, Key key) {
     Key keyCode = key;
-    if (isPressed(key) && !isKeyCaptured(key)) {
+    if (isPressed(key) && !isMuted(key)) {
         out.insert(keyCode);
         m_hardwareKeys.erase(keyCode);
     }
@@ -153,7 +151,7 @@ void KeyHook::spoof(Key key, bool pressed) {
     s_hook = this;
     m_currentKey = key;
     m_pressed = pressed;
-    m_window = "debug";
+    m_window = "Spoof";
     preScript();
     script();
     postScript();
@@ -175,28 +173,23 @@ void KeyHook::insertKeys(std::set<Key> keys) {
         rawSend(key, true);
     }
 }
-void KeyHook::captureKey(Key key) {
-    std::cout << "captured: " << key.toStr() << std::endl;
-    m_capturedKeys.insert(key);
+void KeyHook::unmute(Key key) {
+    std::cout << "unmuted: " << key.toStr() << std::endl;
+    m_mutedKeys.erase(key);
 }
-void KeyHook::releaseKey(Key key) {
-    std::cout << "released: " << key.toStr() << std::endl;
-    m_capturedKeys.erase(key);
-}
-bool KeyHook::isKeyCaptured(Key key) {
-    return m_capturedKeys.count(key) > 0;
+bool KeyHook::isMuted(Key key) {
+    return m_mutedKeys.count(key) > 0;
 }
 
 void KeyHook::postScript() {
-    if (!isKeyCaptured(currentKey())) {
+    if (!isMuted(currentKey())) {
         std::cout << "=";
         rawSend(currentKey(), isPressed());
     } else {
         if (!isPressed()) {
-            releaseKey(currentKey());
+            unmute(currentKey());
         }
     }
-
     for (QueuedKey q: m_sendBuffer) {
         if (q.blind) {
             rawSend(currentKey(), isPressed());
@@ -219,11 +212,11 @@ void KeyHook::rawSend(Key key, bool pressed) {
 void KeyHook::on(Condition given, Action then, Action otherwise) {
     std::string path = m_callPath;
     int callCode = given.call();
-    bool capture = given.captureKey();
+    bool mute = given.muteKey();
     if (callCode == 1) {
         unTrack(path + "2");
         m_callPath += "1";
-        track(then, capture);
+        track(then, mute);
     } else if (callCode == 0) {
         unTrack(path + "1");
         m_callPath += "2";
@@ -231,36 +224,28 @@ void KeyHook::on(Condition given, Action then, Action otherwise) {
     }
     m_callPath = path + "0\n";
 }
+bool KeyHook::isWindow(std::string windowName) {
+    return currentWindow() == windowName;
+}
+bool KeyHook::isPressed(Keys keys) {
+    if (keys.list.empty()) {
+        return true;
+    }
+    for (Key key : keys.list) {
+        if (!s_hook->isPressed(key)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 
 int Condition::call() {
-    return m_callback();
+    return m_pressCode;
 }
 
 
-Condition::Condition(Window window) {
-    m_callback = [&] {
-        return s_hook->currentWindow() == window.name();
-    };
-}
-Condition::Condition(Keys keys) {
-    m_interceptKey = true;
-    m_callback = [keys] {
-        for (Key key : keys.list) {
-            if (!s_hook->isPressed(key)) {
-                return 0;
-            }
-        }
-        if (!keys.isCurrentModifiers()) {
-            return 0;
-        }
-        if (keys.isCurrentKey()) {
-//            std::cout << "Not current: " << keys.list.back().toChar() << std::endl;
-            return 1;
-        }
-        return 2;
-    };
-}
+Condition::Condition(Keys keys) : Condition(s_hook->getPressCode(keys)) {}
 
 void Action::call(std::string path) {
     m_path = path;
@@ -279,15 +264,15 @@ Action::Action(Keys keys) {
 bool Action::withinPath(std::string path) {
     return startsWith(m_path, path);
 }
-void Action::captureKey() {
+void Action::muteKey() {
     m_capturedKey = s_hook->currentKey();
-    s_hook->captureKey(m_capturedKey);
+    s_hook->mute(m_capturedKey);
     m_hasCapturedKey = true;
 
 }
 void Action::releaseKey() {
     if (m_hasCapturedKey) {
-        s_hook->releaseKey(m_capturedKey);
+        s_hook->unmute(m_capturedKey);
         m_hasCapturedKey = false;
     }
 }
@@ -298,15 +283,15 @@ void ActionTracker::unTrack(KeyHook& hook, std::string path) {
             Action active = m_active[i];
             m_active.erase(m_active.begin() + i);
             active.call(m_active[i].path());
-//            active.captureKey();
+//            active.mute();
             continue;
         }
         i += 1;
     }
 }
-void ActionTracker::track(std::string callPath, Action action, bool capture) {
-    if (capture) {
-        action.captureKey();
+void ActionTracker::track(std::string callPath, Action action, bool mute) {
+    if (mute) {
+        action.muteKey();
     }
     action.call(callPath);
     if (!isActive(action)) {
@@ -314,18 +299,4 @@ void ActionTracker::track(std::string callPath, Action action, bool capture) {
     }
 }
 
-bool Keys::isCurrentKey() const {
-    if (list.empty()) {
-        return true;
-    }
-//    cout << "Curr: " << list.back().toChar() << " " << s_hook->currentKey().toChar() << endl;
-    return list.back().getCode() == s_hook->currentKey().getCode();
-}
-bool Keys::isCurrentModifiers() const {
-    std::set<Key> mods = s_hook->getModKeys();
-    for (Key key: list) {
-        mods.erase(key);
-    }
-    return mods.empty();
-}
 }

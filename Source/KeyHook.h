@@ -9,71 +9,27 @@
 
 namespace kh {
 
-class Keys {
-public:
-    Keys() {};
-    Keys(Key key) {
-        list.push_back(key);
-    };
-    std::vector<Key> list;
-    bool isCurrentKey() const;
-    bool isCurrentModifiers() const;
-};
-
-
-inline Keys operator+(const Key& left, const Key& right) {
-    Keys keys;
-    keys.list.push_back(left);
-    keys.list.push_back(right);
-    return keys;
-}
-
-inline Keys operator+(const Keys& keys, const Key& key) {
-    Keys copy = keys;
-    copy.list.push_back(key);
-    return copy;
-}
 
 class KeyHook;
 
-class Window {
-public:
-    explicit Window(std::string name) {
-        m_name = name;
-    }
-    std::string name() {
-        return m_name;
-    }
-private:
-    std::string m_name;
-};
-
 class Condition {
 public:
-    Condition() {
-        m_callback = [] { return 1; };
-    }
+    Condition() : Condition(true) {}
     Condition(bool active) {
-        m_callback = [=]() {
-            return active;
-        };
+        m_pressCode = active ? 1 : 0;
     }
-    Condition(std::function<int()> callback) {
-        m_callback = callback;
+    Condition(int pressCode) {
+        m_pressCode = pressCode;
     }
-    Condition(std::function<bool()> callback) {
-        m_callback = [=]() {
-            return callback() ? 1 : 0;
-        };
-    }
+    Condition(std::function<int()> callback) : Condition(callback()) {}
+    Condition(std::function<bool()> callback) : Condition(callback()) {}
     Condition(Keys keys);
     Condition(Key key) : Condition(Keys(key)) {}
-    Condition(Window window);
     int call();
-    bool captureKey() { return m_interceptKey; };
+    bool muteKey() { return m_interceptKey; }
 
 private:
-    std::function<int()> m_callback;
+    int m_pressCode;
     bool m_interceptKey = false;
 };
 
@@ -87,10 +43,10 @@ public:
         m_callback = callback;
     }
     void call(std::string path);
-    std::string path() const { return m_path; };
+    std::string path() const { return m_path; }
     bool withinPath(std::string path);
-    void captureKey();
-    void releaseKey();;
+    void muteKey();
+    void releaseKey();
 
 private:
     std::function<void()> m_callback = [] {};
@@ -109,7 +65,7 @@ struct QueuedKey {
 class ActionTracker {
 public:
     std::vector<Action> m_active;
-    void track(std::string callPath, Action action, bool capture);
+    void track(std::string callPath, Action action, bool mute);
     void unTrack(KeyHook& hook, std::string path);
     bool isActive(const Action action) {
         for (Action active: m_active) {
@@ -123,30 +79,148 @@ public:
 
 class KeyHook : public KeyCodes {
 public:
-    KeyHook() {
-    }
+    KeyHook() {}
     virtual ~KeyHook() {}
-    bool isPressed(Key key);
-    Key currentKey() { return m_currentKey; };
-    bool isKeyCaptured(Key key);;
+
+    /// Starts the execution.
     void start();
-    bool isPressed() { return m_pressed; }
+    /// Simulates a key event. Useful for debugging.
+    void spoof(Key key, bool pressed);
+    /// Triggers action "then" if condition is true, or "otherwise" (optional) if false.
+    /// E.g. on(A, B), send key B if key A is currently pressed.
+    void on(Condition given, Action then, Action otherwise = Action());
+    /// Returns true if key is pressed.
+    bool isPressed(Key key);
+    /// Returns true if all keys are pressed.
+    bool isPressed(Keys keys);
+    /// Returns true if active and the last key in keys
+    /// is the key currently pressed.
+    bool isActivated(Keys keys) {
+        if (!isActive(keys)) {
+            return false;
+        }
+        return isCurrentKey(keys);
+    }
+    /// Returns true if all keys are pressed and modifiers are valid.
+    /// E.g. Ctrl + A is active when Ctrl and A is pressed.
+    /// Mod keys cannot be combined with other mod keys, normal keys
+    /// can be combined, e.g. both A and A + B are active when A
+    /// and B is pressed.
+    /// A is not active when Ctrl + A is pressed.
+    /// Ctrl + A is not active when Ctrl + Shift + A is pressed.
+    bool isActive(Keys keys) {
+        if (!isPressed(keys)) {
+            return false;
+        }
+        return isValidMods(keys);
+    }
+    /// Similar to isPressed() but does not allow any additional keys
+    /// to be pressed.
+    int isExactly(Keys keys) {
+        if (!isPressed()) {
+            false;
+        }
+        return m_hardwareKeys.size() == keys.list.size();
+    }
+    /// Returns 1 if key combo is activated: all keys are pressed and the
+    /// last key is the key currently pressed. This also mutes the key.
+    /// Returns 2 if active: all keys are pressed, but the last key is not actively pressed.
+    /// Returns 0 otherwise.
+    int getPressCode(Keys keys) {
+        if (!isPressed(keys)) {
+            return 0;
+        }
+        if (!isValidMods(keys)) {
+            return 0;
+        }
+        if (isActivated(keys)) {
+            return 1;
+        }
+        return 2;
+    }
+    /// Returns true if all modifiers in keys, if any, is pressed.
+    /// Returns false if any additional modifiers are pressed not part of keys.
+    /// Shift is a special case, if Shift is the only additional modifier returns true
+    /// E.g. If Ctrl and A is pressed, Ctrl + A is true.
+    /// E.g. If Shift, Ctrl and A is pressed, Ctrl + A is not true since additional
+    /// modifiers are pressed.
+    bool isValidMods(Keys keys) {
+        std::set<Key> extraMods = getModKeys();
+        for (Key key: keys.list) {
+            extraMods.erase(key);
+        }
+        if (extraMods.empty()) {
+            return true;
+        }
+        // Shift special case
+        if (extraMods.size() == 1 && extraMods.count(Shift) > 0) {
+            return true;
+        }
+        return false;
+    }
+    /// Returns true if the name of the currently active window is windowName.
+    bool isWindow(std::string windowName);
+    /// Returns the name of the currently active window.
     std::string currentWindow() { return m_window; }
-    virtual void debug() = 0;
-    virtual void spoof(Key key, bool pressed);
-
-    std::string callPath() { return m_callPath; };
+    /// Returns the currently pressed key.
+    Key currentKey() { return m_currentKey; }
+    /// Returns true if the currently sent key is pressed.
+    bool isPressed() { return m_pressed; }
+    /// Send key with modifiers filtered out.
+    /// E.g. if Ctrl is pressed while sending B, Ctrl is release before
+    /// sending and then pressed again.
     void sendKey(Key key);
-    std::set<Key> getModKeys();
-
+    /// Send key without releasing modifiers first.
     void sendKeyBlind(Key key, bool pressed);
+    /// Returns any currently pressed modifier keys.
+    std::set<Key> getModKeys();
+    /// Prevents the key from being sent when pressed.
+    void mute(Key key) {
+        std::cout << "muted: " << key.toStr() << std::endl;
+        m_mutedKeys.insert(key);
+    };
+    /// Mutes multiple keys.
+    void mute(std::initializer_list<Key> keys) {
+        for (Key key : keys) {
+            mute(key);
+        }
+    }
+    /// Unmutes a key,
+    void unmute(Key key);
+    /// Returns if has been muted
+    bool isMuted(Key key);
+    /// Returns true if key is the currently pressed key.
+    bool isCurrentKey(Key key) {
+        return currentKey() == key;
+    }
+    /// Returns true if the last key in keys is the currently pressed key or if
+    /// keys are empty.
+    bool isCurrentKey(Keys keys) {
+        if (keys.list.empty()) {
+            return true;
+        }
+        return isCurrentKey(keys.list.back());
+    }
+    /// Returns true for key not a modifier key, e.g. A, B, 1, 2, Return, Enter
+    bool isNormalKey(Key key) {
+        return !isModKey(key);
+    }
+    /// Returns if key is a modifier key, i.e. Shift, Ctrl or Alt.
+    bool isModKey(Key key) {
+        if (key == KeyCodes::Shift) { return true; }
+        if (key == KeyCodes::RShift) { return true; }
+        if (key == KeyCodes::Ctrl) { return true; }
+        if (key == KeyCodes::RCtrl) { return true; }
+        if (key == KeyCodes::Alt) { return true; }
+        if (key == KeyCodes::RAlt) { return true; }
+        return false;
+    }
 
-    void captureKey(Key key);
-    void releaseKey(Key key);
 private:
+//    std::string callPath() { return m_callPath; }
     void preScript();
+    void postScript();
     std::set<Key> extractModKeys();
-
     void extractKey(std::set<Key>& out, Key key);
     void getKey(std::set<Key>& out, Key key);
     void rawSend(std::set<Key> keys, bool pressed);
@@ -156,43 +230,26 @@ private:
     Key m_currentKey = Key(0);
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
-    std::set<Key> m_capturedKeys;
+    std::set<Key> m_mutedKeys;
     ActionTracker m_actionTracker;
     bool m_debug = false;
     std::vector<QueuedKey> m_sendBuffer;
 
-
 protected:
     virtual void script() = 0;
-
-    void on(Condition given, Action then = Action(), Action otherwise = Action());
-
-    void silence(Key key) {
-        on(key);
+    void track(Action action, bool mute) {
+        bool pressed = m_pressed;
+        m_pressed = true;
+        m_actionTracker.track(m_callPath, action, mute);
+        m_pressed = pressed;
     }
-
-    void silence(std::initializer_list<Key> keys) {
-        for (Key key : keys) {
-            silence(key);
-        }
-    }
-//    void silence( key) {
-//        on(key);
-//    }
     void unTrack(std::string path) {
         bool pressed = m_pressed;
         m_pressed = false;
         m_actionTracker.unTrack(*this, path);
         m_pressed = pressed;
     }
-    void track(Action action, bool capture) {
-        bool pressed = m_pressed;
-        m_pressed = true;
-        m_actionTracker.track(m_callPath, action, capture);
-        m_pressed = pressed;
-    }
     void insertKeys(std::set<Key> keys);
-    void postScript();
     void rawSend(Key key, bool pressed);
 };
 

@@ -5,7 +5,7 @@
 /// /// Credits goes to this article by Charles Nicholson:
 /// http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
 #ifndef NDEBUG
-#define _XASSERTS_ENABLED // Uncomment this line to silence all xassert
+#define _XASSERTS_ENABLED // Uncomment this line to mute all xassert
 #endif
 
 namespace XAssert {

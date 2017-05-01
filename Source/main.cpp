@@ -8,14 +8,26 @@ protected:
     void script() {
         std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
-        silence(Ctrl);
-        on(!isPressed(Ctrl), Action([&] {
-            silence({W, A, S, D});
-            on(isPressed(W), ArrowUp);
-            on(isPressed(A), ArrowLeft);
-            on(isPressed(S), ArrowDown);
-            on(isPressed(D), ArrowRight);
-        }));
+//        mute(Ctrl);
+//        on(!isPressed(Ctrl), Action([&] {
+////            silence({W, A, S, D});
+//            on(W, ArrowUp);
+//            on(A, ArrowLeft);
+//            on(S, ArrowDown);
+//            on(D, ArrowRight);
+//        }));
+        on(Condition(W), ArrowUp);
+//        on(A, ArrowLeft);
+//        on(S, ArrowDown);
+//        on(D, ArrowRight);
+//
+//        on(Ctrl + W, W);
+//        on(Ctrl + A, A);
+//        on(Ctrl + S, S);
+//        on(Ctrl + D, D);
+
+
+
 
 //        on(S, D);
 
@@ -53,9 +65,9 @@ public:
 
         spoof(W, true);
         spoof(W, false);
-        spoof(Ctrl, true);
-        spoof(W, true);
-        spoof(Ctrl, false);
+//        spoof(Ctrl, true);
+//        spoof(W, true);
+//        spoof(Ctrl, false);
 //        spoof(W, true);
 //        spoof(W, false);
 

@@ -13,52 +13,52 @@ public:
         m_str = toStr();
     }
     std::string toStr() const {
-        int code = m_code;
-        if (code == 16) return "Q";
-        if (code == 17) return "W";
-        if (code == 18) return "E";
-        if (code == 19) return "R";
-        if (code == 20) return "T";
-        if (code == 21) return "Y";
-        if (code == 22) return "U";
-        if (code == 23) return "I";
-        if (code == 24) return "O";
-        if (code == 25) return "P";
+        int c = m_code;
+        return c == 16 ? "Q" :
+               c == 17 ? "W" :
+               c == 18 ? "E" :
+               c == 19 ? "R" :
+               c == 20 ? "T" :
+               c == 21 ? "Y" :
+               c == 22 ? "U" :
+               c == 23 ? "I" :
+               c == 24 ? "O" :
+               c == 25 ? "P" :
 
-        if (code == 30) return "A";
-        if (code == 31) return "S";
-        if (code == 32) return "D";
-        if (code == 33) return "F";
-        if (code == 34) return "G";
-        if (code == 35) return "H";
-        if (code == 36) return "J";
-        if (code == 37) return "K";
-        if (code == 38) return "L";
+               c == 30 ? "A" :
+               c == 31 ? "S" :
+               c == 32 ? "D" :
+               c == 33 ? "F" :
+               c == 34 ? "G" :
+               c == 35 ? "H" :
+               c == 36 ? "J" :
+               c == 37 ? "K" :
+               c == 38 ? "L" :
 
-        if (code == 44) return "Z";
-        if (code == 45) return "X";
-        if (code == 46) return "C";
-        if (code == 47) return "V";
-        if (code == 48) return "B";
-        if (code == 49) return "N";
-        if (code == 50) return "M";
+               c == 44 ? "Z" :
+               c == 45 ? "X" :
+               c == 46 ? "C" :
+               c == 47 ? "V" :
+               c == 48 ? "B" :
+               c == 49 ? "N" :
+               c == 50 ? "M" :
 
-        if (code == 42) return "Shift";
-        if (code == 29) return "Ctrl";
-        if (code == 56) return "Alt";
-        if (code == 54) return "RShift";
-        if (code == 157) return "RCtrl";
-        if (code == 184) return "RAlt";
+               c == 42 ? "Shift" :
+               c == 29 ? "Ctrl" :
+               c == 56 ? "Alt" :
+               c == 54 ? "RShift" :
+               c == 157 ? "RCtrl" :
+               c == 184 ? "RAlt" :
 
-        if (code == 200) return "ArrowUp";
-        if (code == 203) return "ArrowLeft";
-        if (code == 208) return "ArrowDown";
-        if (code == 205) return "ArrowRight";
+               c == 200 ? "ArrowUp" :
+               c == 203 ? "ArrowLeft" :
+               c == 208 ? "ArrowDown" :
+               c == 205 ? "ArrowRight" :
 
-        if (code == 156) return "Enter";
-        if (code == 28) return "Return";
+               c == 156 ? "Enter" :
+               c == 28 ? "Return" :
 
-        return std::to_string(code);
+               std::to_string(c);
     }
     int getCode() const {
         return m_code;
@@ -73,6 +73,28 @@ private:
     int m_code;
     std::string m_str;
 };
+
+class Keys {
+public:
+    Keys() {};
+    Keys(Key key) {
+        list.push_back(key);
+    };
+    std::vector<Key> list;
+};
+
+inline Keys operator+(const Key& left, const Key& right) {
+    Keys keys;
+    keys.list.push_back(left);
+    keys.list.push_back(right);
+    return keys;
+}
+
+inline Keys operator+(const Keys& keys, const Key& key) {
+    Keys copy = keys;
+    copy.list.push_back(key);
+    return copy;
+}
 
 class KeyCodes {
 public:
