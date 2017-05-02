@@ -6,7 +6,7 @@ namespace kh {
 
 class Key {
 public:
-    Key() {
+    Key() : Key(0) {
     }
     Key(int code) {
         m_code = code;
@@ -43,6 +43,7 @@ public:
                c == 49 ? "N" :
                c == 50 ? "M" :
 
+               c == 1 ? "Escape" :
                c == 42 ? "Shift" :
                c == 29 ? "Ctrl" :
                c == 56 ? "Alt" :
@@ -50,10 +51,10 @@ public:
                c == 157 ? "RCtrl" :
                c == 184 ? "RAlt" :
 
-               c == 200 ? "ArrowUp" :
-               c == 203 ? "ArrowLeft" :
-               c == 208 ? "ArrowDown" :
-               c == 205 ? "ArrowRight" :
+               c == 200 ? "Up" :
+               c == 203 ? "Left" :
+               c == 208 ? "Down" :
+               c == 205 ? "Right" :
 
                c == 156 ? "Enter" :
                c == 28 ? "Return" :
@@ -152,10 +153,10 @@ public:
     Key RCtrl = 157;
     Key RAlt = 184;
 
-    Key ArrowUp = 200;
-    Key ArrowLeft = 203;
-    Key ArrowDown = 208;
-    Key ArrowRight = 205;
+    Key Up = 200;
+    Key Left = 203;
+    Key Down = 208;
+    Key Right = 205;
 
     Key Numpad1 = 79;
     Key Numpad2 = 80;

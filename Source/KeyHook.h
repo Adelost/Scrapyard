@@ -19,6 +19,7 @@ public:
         m_pressCode = active ? 1 : 0;
     }
     Condition(int pressCode) {
+        m_muting = true;
         m_pressCode = pressCode;
     }
     Condition(std::function<int()> callback) : Condition(callback()) {}
@@ -26,11 +27,11 @@ public:
     Condition(Keys keys);
     Condition(Key key) : Condition(Keys(key)) {}
     int call();
-    bool muteKey() { return m_interceptKey; }
+    bool isMuting() { return m_muting; }
 
 private:
     int m_pressCode;
-    bool m_interceptKey = false;
+    bool m_muting = false;
 };
 
 
@@ -45,14 +46,10 @@ public:
     void call(std::string path);
     std::string path() const { return m_path; }
     bool withinPath(std::string path);
-    void muteKey();
-    void releaseKey();
 
 private:
     std::function<void()> m_callback = [] {};
     std::string m_path = "";
-    Key m_capturedKey;
-    bool m_hasCapturedKey = false;
     bool m_empty = false;
 };
 
@@ -65,7 +62,7 @@ struct QueuedKey {
 class ActionTracker {
 public:
     std::vector<Action> m_active;
-    void track(std::string callPath, Action action, bool mute);
+    void track(std::string callPath, Action action);
     void unTrack(KeyHook& hook, std::string path);
     bool isActive(const Action action) {
         for (Action active: m_active) {
@@ -86,13 +83,26 @@ public:
     void start();
     /// Simulates a key event. Useful for debugging.
     void spoof(Key key, bool pressed);
-    /// Triggers action "then" if condition is true, or "otherwise" (optional) if false.
-    /// E.g. on(A, B), send key B if key A is currently pressed.
+    /// If else condition based on either bool or pressCode.
+    /// Activates action "then" if condition is true or pressCode is 1 (activated),
+    /// or activates "otherwise" (optional) if false or pressCode is 0 (disabled).
+    /// Does nothing if press code is 2 (active).
+    /// N.B. on(A, B) is equivalent to on(getPressCode(A), B).
+    /// E.g. on(isPressed(A), B), sends A pressed (if key is not muted elsewhere) and sends B.
+    /// E.g. on(getPressCode(A), B), sends key B if A is currently pressed and mutes A.
     void on(Condition given, Action then, Action otherwise = Action());
     /// Returns true if key is pressed.
     bool isPressed(Key key);
     /// Returns true if all keys are pressed.
     bool isPressed(Keys keys);
+    /// Similar to isPressed() but does not allow any additional keys
+    /// to be pressed.
+    int isExactly(Keys keys) {
+        if (!isPressed()) {
+            false;
+        }
+        return m_hardwareKeys.size() == keys.list.size();
+    }
     /// Returns true if active and the last key in keys
     /// is the key currently pressed.
     bool isActivated(Keys keys) {
@@ -113,14 +123,6 @@ public:
             return false;
         }
         return isValidMods(keys);
-    }
-    /// Similar to isPressed() but does not allow any additional keys
-    /// to be pressed.
-    int isExactly(Keys keys) {
-        if (!isPressed()) {
-            false;
-        }
-        return m_hardwareKeys.size() == keys.list.size();
     }
     /// Returns 1 if key combo is activated: all keys are pressed and the
     /// last key is the key currently pressed. This also mutes the key.
@@ -175,10 +177,7 @@ public:
     /// Returns any currently pressed modifier keys.
     std::set<Key> getModKeys();
     /// Prevents the key from being sent when pressed.
-    void mute(Key key) {
-        std::cout << "muted: " << key.toStr() << std::endl;
-        m_mutedKeys.insert(key);
-    };
+    void mute(Key key);;
     /// Mutes multiple keys.
     void mute(std::initializer_list<Key> keys) {
         for (Key key : keys) {
@@ -221,13 +220,11 @@ private:
     void preScript();
     void postScript();
     std::set<Key> extractModKeys();
-    void extractKey(std::set<Key>& out, Key key);
-    void getKey(std::set<Key>& out, Key key);
     void rawSend(std::set<Key> keys, bool pressed);
 
     bool m_pressed;
     std::string m_window;
-    Key m_currentKey = Key(0);
+    Key m_currentKey;
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
     std::set<Key> m_mutedKeys;
@@ -237,10 +234,10 @@ private:
 
 protected:
     virtual void script() = 0;
-    void track(Action action, bool mute) {
+    void track(Action action) {
         bool pressed = m_pressed;
         m_pressed = true;
-        m_actionTracker.track(m_callPath, action, mute);
+        m_actionTracker.track(m_callPath, action);
         m_pressed = pressed;
     }
     void unTrack(std::string path) {

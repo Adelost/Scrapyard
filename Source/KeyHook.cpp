@@ -90,10 +90,18 @@ std::set<Key> KeyHook::extractModKeys() {
     std::set<Key> mods;
     for (Key key : m_hardwareKeys) {
         if (isModKey(key)) {
-            extractKey(mods, key);
+            mods.insert(key);
         }
     }
-    rawSend(mods, false);
+    // Shift acts as a soft modifier
+    if (mods.size() == 1 && mods.count(Shift) > 0) {
+        mods.erase(Shift);
+    }
+    for (Key mod : mods) {
+        m_hardwareKeys.erase(mod);
+        rawSend(mods, false);
+    }
+
     return mods;
 }
 
@@ -105,21 +113,6 @@ std::set<Key> KeyHook::getModKeys() {
         }
     }
     return mods;
-}
-
-void KeyHook::extractKey(std::set<Key>& out, Key key) {
-    Key keyCode = key;
-    if (isPressed(key) && !isMuted(key)) {
-        out.insert(keyCode);
-        m_hardwareKeys.erase(keyCode);
-    }
-}
-
-void KeyHook::getKey(std::set<Key>& out, Key key) {
-    Key keyCode = key;
-    if (isPressed(key)) {
-        out.insert(keyCode);
-    }
 }
 
 void KeyHook::rawSend(std::set<Key> keys, bool pressed) {
@@ -174,7 +167,7 @@ void KeyHook::insertKeys(std::set<Key> keys) {
     }
 }
 void KeyHook::unmute(Key key) {
-    std::cout << "unmuted: " << key.toStr() << std::endl;
+//    std::cout << "unmuted: " << key.toStr() << std::endl;
     m_mutedKeys.erase(key);
 }
 bool KeyHook::isMuted(Key key) {
@@ -212,15 +205,17 @@ void KeyHook::rawSend(Key key, bool pressed) {
 void KeyHook::on(Condition given, Action then, Action otherwise) {
     std::string path = m_callPath;
     int callCode = given.call();
-    bool mute = given.muteKey();
     if (callCode == 1) {
+        if (given.isMuting()) {
+            mute(currentKey());
+        }
         unTrack(path + "2");
         m_callPath += "1";
-        track(then, mute);
+        track(then);
     } else if (callCode == 0) {
         unTrack(path + "1");
         m_callPath += "2";
-        track(otherwise, false);
+        track(otherwise);
     }
     m_callPath = path + "0\n";
 }
@@ -237,6 +232,10 @@ bool KeyHook::isPressed(Keys keys) {
         }
     }
     return true;
+}
+void KeyHook::mute(Key key) {
+//    std::cout << "muted: " << key.toStr() << std::endl;
+    m_mutedKeys.insert(key);
 }
 
 
@@ -264,18 +263,6 @@ Action::Action(Keys keys) {
 bool Action::withinPath(std::string path) {
     return startsWith(m_path, path);
 }
-void Action::muteKey() {
-    m_capturedKey = s_hook->currentKey();
-    s_hook->mute(m_capturedKey);
-    m_hasCapturedKey = true;
-
-}
-void Action::releaseKey() {
-    if (m_hasCapturedKey) {
-        s_hook->unmute(m_capturedKey);
-        m_hasCapturedKey = false;
-    }
-}
 
 void ActionTracker::unTrack(KeyHook& hook, std::string path) {
     for (int i = 0; i < m_active.size();) {
@@ -289,10 +276,7 @@ void ActionTracker::unTrack(KeyHook& hook, std::string path) {
         i += 1;
     }
 }
-void ActionTracker::track(std::string callPath, Action action, bool mute) {
-    if (mute) {
-        action.muteKey();
-    }
+void ActionTracker::track(std::string callPath, Action action) {
     action.call(callPath);
     if (!isActive(action)) {
         m_active.push_back(action);

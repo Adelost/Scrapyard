@@ -11,15 +11,15 @@ protected:
 //        mute(Ctrl);
 //        on(!isPressed(Ctrl), Action([&] {
 ////            silence({W, A, S, D});
-//            on(W, ArrowUp);
-//            on(A, ArrowLeft);
-//            on(S, ArrowDown);
-//            on(D, ArrowRight);
+//            on(W, Up);
+//            on(A, Left);
+//            on(S, Down);
+//            on(D, Right);
 //        }));
-        on(Condition(W), ArrowUp);
-//        on(A, ArrowLeft);
-//        on(S, ArrowDown);
-//        on(D, ArrowRight);
+        on(A, B);
+//        on(A, Left);
+//        on(S, wDown);
+//        on(D, Right);
 //
 //        on(Ctrl + W, W);
 //        on(Ctrl + A, A);
@@ -49,10 +49,10 @@ protected:
 
 
 
-//        on(T, ArrowUp);
-//        on(F, ArrowLeft);
-//        on(G, ArrowDown);
-//        on(H, ArrowRight);
+//        on(T, Up);
+//        on(F, Left);
+//        on(G, Down);
+//        on(H, Right);
 //
 //        on(Ctrl + W, W);
 //        on(Ctrl + A, A);
@@ -63,11 +63,12 @@ public:
     void debug() {
 //        spoof(Ctrl, true);
 
-        spoof(W, true);
-        spoof(W, false);
-//        spoof(Ctrl, true);
 //        spoof(W, true);
-//        spoof(Ctrl, false);
+//        spoof(W, false);
+        spoof(Shift, true);
+        spoof(A, true);
+//        spoof(W, false);
+//        spoof(W, true);
 //        spoof(W, true);
 //        spoof(W, false);
 
@@ -85,10 +86,10 @@ public:
 //        spoof(S, false);
 
 
-//        spoof(ArrowDown, true);
-//        spoof(ArrowRight, true);
-//        spoof(ArrowDown, false);
-//        spoof(ArrowRight, false);
+//        spoof(Down, true);
+//        spoof(Right, true);
+//        spoof(Down, false);
+//        spoof(Right, false);
 //
 //        spoof(S, true);
 //        spoof(D, true);
@@ -101,8 +102,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-    hook.debug();
-//    hook.start();
+//    hook.debug();
+    hook.start();
 
 
 //    hook.debug(Key('w'), true);
