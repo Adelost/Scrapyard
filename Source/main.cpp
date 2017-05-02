@@ -102,8 +102,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-//    hook.debug();
-    hook.start();
+    hook.debug();
+//    hook.start();
 
 
 //    hook.debug(Key('w'), true);

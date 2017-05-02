@@ -109,7 +109,7 @@ std::set<Key> KeyHook::getModKeys() {
     std::set<Key> mods;
     for (Key key : m_hardwareKeys) {
         if (isModKey(key)) {
-            m_hardwareKeys.insert(key);
+            mods.insert(key);
         }
     }
     return mods;
