@@ -148,14 +148,14 @@ public:
     /// modifiers are pressed.
     bool isValidMods(Keys keys) {
         std::set<Key> extraMods = getModKeys();
+        // Shift special case
+        if (extraMods.size() == 1 && extraMods.count(Shift) > 0) {
+            return true;
+        }
         for (Key key: keys.list) {
             extraMods.erase(key);
         }
         if (extraMods.empty()) {
-            return true;
-        }
-        // Shift special case
-        if (extraMods.size() == 1 && extraMods.count(Shift) > 0) {
             return true;
         }
         return false;

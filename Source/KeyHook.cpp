@@ -183,14 +183,26 @@ void KeyHook::postScript() {
             unmute(currentKey());
         }
     }
+    bool stashedMods = false;
+    std::set<Key> modKeys;
     for (QueuedKey q: m_sendBuffer) {
         if (q.blind) {
+            if(stashedMods) {
+                insertKeys(modKeys);
+                stashedMods = false;
+            }
             rawSend(currentKey(), isPressed());
         } else {
-            std::set<Key> modKeys = extractModKeys();
+            if(!stashedMods) {
+                modKeys = extractModKeys();
+                stashedMods = true;
+            }
             rawSend(q.key, q.pressed);
-            insertKeys(modKeys);
+
         }
+    }
+    if(stashedMods) {
+        insertKeys(modKeys);
     }
     m_sendBuffer.clear();
 }

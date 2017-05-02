@@ -16,7 +16,7 @@ protected:
 //            on(S, Down);
 //            on(D, Right);
 //        }));
-        on(A, B);
+        on(Ctrl + A, Shift + B);
 //        on(A, Left);
 //        on(S, wDown);
 //        on(D, Right);
@@ -65,6 +65,7 @@ public:
 
 //        spoof(W, true);
 //        spoof(W, false);
+        spoof(Ctrl, true);
         spoof(Shift, true);
         spoof(A, true);
 //        spoof(W, false);
@@ -102,21 +103,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-    hook.debug();
-//    hook.start();
-
-
-//    hook.debug(Key('w'), true);
-//    hook.debug(Key('e'), true);
-//    hook.debug(Key('e'), true);
-//    hook.debug(Key('w'), false);
-
-
-//    hook.debug(Key::LCTRL, false);
-//    hook.debug(Key('w'), false);
-//    hook.debug(Key('w'), true);
-//    hook.debug(Key('w'), false);
-
+//    hook.debug();
+    hook.start();
 
     return 0;
 }
