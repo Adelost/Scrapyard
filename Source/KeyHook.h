@@ -221,6 +221,18 @@ private:
     void postScript();
     std::set<Key> extractModKeys();
     void rawSend(std::set<Key> keys, bool pressed);
+    bool isStashedMods() {
+        return m_stashedMods;
+    }
+    void stashMods() {
+        m_modStash = extractModKeys();
+        m_stashedMods = true;
+    }
+
+    void unstashMods() {
+        m_stashedMods = false;
+        insertKeys(m_modStash);
+    }
 
     bool m_pressed;
     std::string m_window;
@@ -231,6 +243,11 @@ private:
     ActionTracker m_actionTracker;
     bool m_debug = false;
     std::vector<QueuedKey> m_sendBuffer;
+    bool m_stashedMods = false;
+    std::set<Key> m_modStash;
+
+
+
 
 protected:
     virtual void script() = 0;

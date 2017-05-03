@@ -6,7 +6,7 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
+//        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
 //        mute(Ctrl);
 //        on(!isPressed(Ctrl), Action([&] {
@@ -65,9 +65,10 @@ public:
 
 //        spoof(W, true);
 //        spoof(W, false);
+//        spoof(Shift, true);
         spoof(Ctrl, true);
-        spoof(Shift, true);
         spoof(A, true);
+        spoof(Ctrl, false);
 //        spoof(W, false);
 //        spoof(W, true);
 //        spoof(W, true);
@@ -103,8 +104,8 @@ public:
 
 int main() {
     MyKeyHook hook;
-//    hook.debug();
-    hook.start();
+    hook.debug();
+//    hook.start();
 
     return 0;
 }
