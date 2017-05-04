@@ -167,7 +167,7 @@ void KeyHook::insertKeys(std::set<Key> keys) {
     }
 }
 void KeyHook::unmute(Key key) {
-//    std::cout << "unmuted: " << key.toStr() << std::endl;
+    std::cout << "unmuted: " << key.toStr() << std::endl;
     m_mutedKeys.erase(key);
 }
 bool KeyHook::isMuted(Key key) {
@@ -176,10 +176,16 @@ bool KeyHook::isMuted(Key key) {
 
 void KeyHook::postScript() {
     bool unmuted = false;
-    bool mutedMod = !m_modStash.count(currentKey()) > 0
-    if ()
-    if (!isMuted(currentKey()) && ) {
+
+//    bool stashedMod = isStashedMods() && m_modStash.count(currentKey()) > 0;
+//    if(!isPressed()) {
+//        m_modStash.erase(currentKey());
+//    }
+    if (!isMuted(currentKey())) {
         std::cout << "=";
+        if (isStashedMods()) {
+            unstashMods();
+        }
         rawSend(currentKey(), isPressed());
     } else {
         if (!isPressed()) {
@@ -199,14 +205,13 @@ void KeyHook::postScript() {
                 stashMods();
             }
             rawSend(q.key, q.pressed);
+        }
+    }
 
-        }
+    if (unmuted && isStashedMods()) {
+        unstashMods();
     }
-    if (unmuted) {
-        if (isStashedMods()) {
-            unstashMods();
-        }
-    }
+
     m_sendBuffer.clear();
 }
 void KeyHook::rawSend(Key key, bool pressed) {
@@ -249,7 +254,7 @@ bool KeyHook::isPressed(Keys keys) {
     return true;
 }
 void KeyHook::mute(Key key) {
-//    std::cout << "muted: " << key.toStr() << std::endl;
+    std::cout << "muted: " << key.toStr() << std::endl;
     m_mutedKeys.insert(key);
 }
 

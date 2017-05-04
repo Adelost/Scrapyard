@@ -72,6 +72,9 @@ public:
         }
         return false;
     }
+    bool hasActiveActions(){
+        return !m_active.empty();
+    }
 };
 
 class KeyHook : public KeyCodes {
@@ -222,16 +225,15 @@ private:
     std::set<Key> extractModKeys();
     void rawSend(std::set<Key> keys, bool pressed);
     bool isStashedMods() {
-        return m_stashedMods;
+        return !m_modStash.empty();
     }
     void stashMods() {
         m_modStash = extractModKeys();
-        m_stashedMods = true;
     }
 
     void unstashMods() {
-        m_stashedMods = false;
         insertKeys(m_modStash);
+        m_modStash.clear();
     }
 
     bool m_pressed;
@@ -243,7 +245,6 @@ private:
     ActionTracker m_actionTracker;
     bool m_debug = false;
     std::vector<QueuedKey> m_sendBuffer;
-    bool m_stashedMods = false;
     std::set<Key> m_modStash;
 
 

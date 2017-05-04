@@ -68,7 +68,8 @@ public:
 //        spoof(Shift, true);
         spoof(Ctrl, true);
         spoof(A, true);
-        spoof(Ctrl, false);
+        spoof(A, false);
+//        spoof(Ctrl, false);
 //        spoof(W, false);
 //        spoof(W, true);
 //        spoof(W, true);
