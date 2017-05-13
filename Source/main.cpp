@@ -6,100 +6,29 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-//        std::cout << "<- " << currentKey().toStr() << " " << isPressed() << std::endl;
 
-//        mute(Ctrl);
-//        on(!isPressed(Ctrl), Action([&] {
-////            silence({W, A, S, D});
-//            on(W, Up);
-//            on(A, Left);
-//            on(S, Down);
-//            on(D, Right);
+        static bool enable = true;
+//        on(Q, "Here I am");
+//        on(enable, Action([&] {
+//            on(W, ArrowUp);
+//            on(A, ArrowLeft);
+//            on(S, ArrowDown);
+//            on(D, ArrowRight);
+//            on(LCtrl + W, W);
+//            on(LCtrl + A, A);
+//            on(LCtrl + S, S);
+//            on(LCtrl + D, D);
 //        }));
-        on(Ctrl + A, Shift + B);
-//        on(A, Left);
-//        on(S, wDown);
-//        on(D, Right);
-//
-//        on(Ctrl + W, W);
-//        on(Ctrl + A, A);
-//        on(Ctrl + S, S);
-//        on(Ctrl + D, D);
-
-
-
-
-//        on(S, D);
-
-//        on(Q);
-
-//        on(isPressed(Q), D);
-//        on(isPressed(Ctrl), D);
-
-//        on(Q, D);
-//        on(S, F);
-
-//        on(isPressed(Ctrl), A);
-//        on(Ctrl, A);
-//        on(isPressed(Ctrl), B);
-//        on(Ctrl, A);
-//        on(isPressed(Ctrl), B);
-
-
-
-
-
-//        on(T, Up);
-//        on(F, Left);
-//        on(G, Down);
-//        on(H, Right);
-//
-//        on(Ctrl + W, W);
-//        on(Ctrl + A, A);
-//        on(Ctrl + S, S);
-//        on(Ctrl + D, D);
+        send("!");
     }
 public:
     void debug() {
-//        spoof(Ctrl, true);
-
-//        spoof(W, true);
-//        spoof(W, false);
-//        spoof(Shift, true);
-        spoof(Ctrl, true);
         spoof(A, true);
-        spoof(A, false);
-//        spoof(Ctrl, false);
-//        spoof(W, false);
-//        spoof(W, true);
-//        spoof(W, true);
-//        spoof(W, false);
-
-
-
-//        spoof(Ctrl, true);
-//        spoof(Ctrl, false);
-//
-//        spoof(Q, true);
-//        spoof(Q, false);
-
-//        spoof(S, true);
-//        spoof(D, true);
-//        spoof(D, false);
-//        spoof(S, false);
-
-
-//        spoof(Down, true);
-//        spoof(Right, true);
-//        spoof(Down, false);
-//        spoof(Right, false);
-//
+//        spoof(X, true);
 //        spoof(S, true);
 //        spoof(D, true);
 //        spoof(S, false);
-//        spoof(D, false);
     }
-
 };
 
 
@@ -107,6 +36,5 @@ int main() {
     MyKeyHook hook;
     hook.debug();
 //    hook.start();
-
     return 0;
 }

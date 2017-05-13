@@ -41,9 +41,12 @@ set(SOURCES
         Source/Utils/Lists/Traits/IndexableContainer.h
         Source/Utils/__internal__/_WindowsConsole.cpp
         Source/Utils/__internal__/_WindowsConsole.h
-        Source/KeyCodes.h
+        #        Source/ScanCodes.cpp
+        Source/Keys.h
         Source/KeyHook.h
-        Source/KeyHook.cpp)
+        Source/KeyHook.cpp
+        Source/ScanCodes.cpp
+        Source/ScanCodes.h)
 
 include_directories(Libs/Interception)
 link_directories(Libs/Interception/x64)

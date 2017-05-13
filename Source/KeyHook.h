@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 #include <initializer_list>
-#include "KeyCodes.h"
+#include "Keys.h"
 
 namespace kh {
 
@@ -34,23 +34,29 @@ private:
     bool m_muting = false;
 };
 
-
 class Action {
 public:
-    Action() { m_empty = true; }
+    Action() {}
+    Action(bool& toggle);
+    Action(std::string text);
+
     Action(Key key) : Action(Keys(key)) {}
     Action(Keys keys);
-    Action(std::function<void()> callback) {
-        m_callback = callback;
+    Action(std::function<void()> activate) {
+        m_activate = activate;
+        m_noActivate = false;
+    }
+    Action(std::function<void()> activate, std::function<void()> deactivate) {
+        m_activate = activate;
+        m_noActivate = false;
     }
     void call(std::string path);
     std::string path() const { return m_path; }
-    bool withinPath(std::string path);
 
 private:
-    std::function<void()> m_callback = [] {};
+    std::function<void()> m_activate;
+    bool m_noActivate = true;
     std::string m_path = "";
-    bool m_empty = false;
 };
 
 struct QueuedKey {
@@ -59,25 +65,29 @@ struct QueuedKey {
     bool blind;
 };
 
-class ActionTracker {
+class PathTracker {
 public:
-    std::vector<Action> m_active;
-    void track(std::string callPath, Action action);
-    void unTrack(KeyHook& hook, std::string path);
-    bool isActive(const Action action) {
-        for (Action active: m_active) {
-            if (active.path() == action.path()) {
+    struct Tracked {
+        std::string path;
+        std::function<void()> callback;
+    };
+    void track(std::string path, std::function<void()> callback);
+    void unTrack(std::string path);
+    bool isTracked(std::string path) {
+        for (Tracked tracked: m_tracked) {
+            if (tracked.path == path) {
                 return true;
             }
         }
         return false;
     }
-    bool hasActiveActions(){
-        return !m_active.empty();
-    }
+
+private:
+    bool withinPath(Tracked& tracked, std::string path);
+    std::vector<Tracked> m_tracked;
 };
 
-class KeyHook : public KeyCodes {
+class KeyHook : public KeysInherit {
 public:
     KeyHook() {}
     virtual ~KeyHook() {}
@@ -94,6 +104,7 @@ public:
     /// E.g. on(isPressed(A), B), sends A pressed (if key is not muted elsewhere) and sends B.
     /// E.g. on(getPressCode(A), B), sends key B if A is currently pressed and mutes A.
     void on(Condition given, Action then, Action otherwise = Action());
+
     /// Returns true if key is pressed.
     bool isPressed(Key key);
     /// Returns true if all keys are pressed.
@@ -152,7 +163,7 @@ public:
     bool isValidMods(Keys keys) {
         std::set<Key> extraMods = getModKeys();
         // Shift special case
-        if (extraMods.size() == 1 && extraMods.count(Shift) > 0) {
+        if (extraMods.size() == 1 && extraMods.count(LShift) > 0) {
             return true;
         }
         for (Key key: keys.list) {
@@ -171,12 +182,20 @@ public:
     Key currentKey() { return m_currentKey; }
     /// Returns true if the currently sent key is pressed.
     bool isPressed() { return m_pressed; }
-    /// Send key with modifiers filtered out.
+    /// Sends key with modifiers filtered out.
     /// E.g. if Ctrl is pressed while sending B, Ctrl is release before
     /// sending and then pressed again.
-    void sendKey(Key key);
+    void send(Key key, bool pressed);
+    /// Sends keys.
+    void send(Keys keys, bool pressed) {
+        for (Key key : keys.list) {
+            send(key, pressed);
+        }
+    }
+    /// Sends text
+    void send(std::string text);
     /// Send key without releasing modifiers first.
-    void sendKeyBlind(Key key, bool pressed);
+    void sendBlind(Key key, bool pressed);
     /// Returns any currently pressed modifier keys.
     std::set<Key> getModKeys();
     /// Prevents the key from being sent when pressed.
@@ -209,13 +228,24 @@ public:
     }
     /// Returns if key is a modifier key, i.e. Shift, Ctrl or Alt.
     bool isModKey(Key key) {
-        if (key == KeyCodes::Shift) { return true; }
-        if (key == KeyCodes::RShift) { return true; }
-        if (key == KeyCodes::Ctrl) { return true; }
-        if (key == KeyCodes::RCtrl) { return true; }
-        if (key == KeyCodes::Alt) { return true; }
-        if (key == KeyCodes::RAlt) { return true; }
+        switch (key.getCode()) {
+            case ScanCode::LShift: return true;
+            case ScanCode::RShift: return true;
+            case ScanCode::LCtrl: return true;
+            case ScanCode::RCtrl: return true;
+            case ScanCode::LAlt: return true;
+            case ScanCode::RAlt: return true;
+            default: break;
+        }
         return false;
+    }
+
+    void track(std::function<void()> action) {
+        m_tracker.track(m_callPath, action);
+    }
+
+    void unTrack(std::string path) {
+        m_tracker.unTrack(path);
     }
 
 private:
@@ -242,28 +272,15 @@ private:
     std::string m_callPath = "";
     std::set<Key> m_hardwareKeys;
     std::set<Key> m_mutedKeys;
-    ActionTracker m_actionTracker;
+    PathTracker m_tracker;
     bool m_debug = false;
     std::vector<QueuedKey> m_sendBuffer;
     std::set<Key> m_modStash;
 
 
-
-
 protected:
     virtual void script() = 0;
-    void track(Action action) {
-        bool pressed = m_pressed;
-        m_pressed = true;
-        m_actionTracker.track(m_callPath, action);
-        m_pressed = pressed;
-    }
-    void unTrack(std::string path) {
-        bool pressed = m_pressed;
-        m_pressed = false;
-        m_actionTracker.unTrack(*this, path);
-        m_pressed = pressed;
-    }
+
     void insertKeys(std::set<Key> keys);
     void rawSend(Key key, bool pressed);
 };

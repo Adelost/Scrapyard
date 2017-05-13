@@ -31,7 +31,7 @@ bool interceptionGetIsPressed(InterceptionKeyStroke stroke) {
     return state == 0;
 }
 void interceptionSend(Key key, bool pressed) {
-    int code = key.getCode();
+    int code = (int) key.getCode();
     int state = !pressed;
     if (code >= 128) {
         code -= 128;
@@ -41,9 +41,18 @@ void interceptionSend(Key key, bool pressed) {
     stroke.code = (unsigned short) code;
     stroke.state = (unsigned short) state;
     interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);;
-
 }
 #endif
+
+ScanCode charToScanCode(char c) {
+#ifdef _WIN32_
+    SHORT virtualKey = VkKeyScan(c);
+    UINT scanCode = MapVirtualKey((UINT) virtualKey, 0);
+    return (ScanCode) scanCode;
+#else
+    return (ScanCode)c;
+#endif
+}
 
 std::string getActiveWindow() {
 #ifdef _WIN32_
@@ -74,12 +83,12 @@ bool startsWith(std::string str, std::string prefix) {
     return true;
 }
 
-void KeyHook::sendKeyBlind(Key key, bool pressed) {
+void KeyHook::sendBlind(Key key, bool pressed) {
     m_sendBuffer.push_back({key, pressed, true});
 }
 
-void KeyHook::sendKey(Key key) {
-    m_sendBuffer.push_back({key, isPressed(), false});
+void KeyHook::send(Key key, bool pressed) {
+    m_sendBuffer.push_back({key, pressed, false});
 }
 
 bool KeyHook::isPressed(Key key) {
@@ -94,8 +103,8 @@ std::set<Key> KeyHook::extractModKeys() {
         }
     }
     // Shift acts as a soft modifier
-    if (mods.size() == 1 && mods.count(Shift) > 0) {
-        mods.erase(Shift);
+    if (mods.size() == 1 && mods.count(LShift) > 0) {
+        mods.erase(LShift);
     }
     for (Key mod : mods) {
         m_hardwareKeys.erase(mod);
@@ -128,7 +137,7 @@ void KeyHook::start() {
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
         s_hook = this;
-        s_hook->m_currentKey = interceptionGetCurrentKey(s_stroke);
+        s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(s_stroke);
         s_hook->m_pressed = interceptionGetIsPressed(s_stroke);
         s_hook->m_window = getActiveWindow();
         s_hook->preScript();
@@ -176,11 +185,6 @@ bool KeyHook::isMuted(Key key) {
 
 void KeyHook::postScript() {
     bool unmuted = false;
-
-//    bool stashedMod = isStashedMods() && m_modStash.count(currentKey()) > 0;
-//    if(!isPressed()) {
-//        m_modStash.erase(currentKey());
-//    }
     if (!isMuted(currentKey())) {
         std::cout << "=";
         if (isStashedMods()) {
@@ -199,7 +203,7 @@ void KeyHook::postScript() {
             if (isStashedMods()) {
                 unstashMods();
             }
-            rawSend(currentKey(), isPressed());
+            rawSend(q.key, q.pressed);
         } else {
             if (!isStashedMods()) {
                 stashMods();
@@ -231,13 +235,13 @@ void KeyHook::on(Condition given, Action then, Action otherwise) {
         }
         unTrack(path + "2");
         m_callPath += "1";
-        track(then);
+        then.call(m_callPath);
     } else if (callCode == 0) {
         unTrack(path + "1");
         m_callPath += "2";
-        track(otherwise);
+        otherwise.call(m_callPath);
     }
-    m_callPath = path + "0\n";
+    m_callPath = path + "0";
 }
 bool KeyHook::isWindow(std::string windowName) {
     return currentWindow() == windowName;
@@ -257,6 +261,23 @@ void KeyHook::mute(Key key) {
     std::cout << "muted: " << key.toStr() << std::endl;
     m_mutedKeys.insert(key);
 }
+void KeyHook::send(std::string text) {
+    for (char c : text) {
+        bool upper = isupper(c);
+        if (upper) {
+            c = (char) tolower(c);
+        };
+        ScanCode code = charToScanCode(c);
+        if (upper) {
+            sendBlind(LShift, true);
+        }
+        send(code, true);
+        send(code, false);
+        if (upper) {
+            sendBlind(LShift, false);
+        }
+    }
+}
 
 
 int Condition::call() {
@@ -268,38 +289,53 @@ Condition::Condition(Keys keys) : Condition(s_hook->getPressCode(keys)) {}
 
 void Action::call(std::string path) {
     m_path = path;
-    if (!m_empty) {
-        m_callback();
+    if (!m_noActivate) {
+        m_activate();
     }
 }
 
 Action::Action(Keys keys) {
-    m_callback = [keys] {
-        for (Key key : keys.list) {
-            s_hook->sendKey(key);
-        }
+    m_activate = [=] {
+        s_hook->send(keys, true);
+        s_hook->track([=] {
+            s_hook->send(keys, false);
+        });
     };
+    m_noActivate = false;
 }
-bool Action::withinPath(std::string path) {
-    return startsWith(m_path, path);
+Action::Action(bool& toggle) {
+    m_activate = [&] {
+        toggle = !toggle;
+    };
+    m_noActivate = false;
+}
+Action::Action(std::string text) {
+    m_activate = [=] {
+        s_hook->send(text);
+    };
+    m_noActivate = false;
 }
 
-void ActionTracker::unTrack(KeyHook& hook, std::string path) {
-    for (int i = 0; i < m_active.size();) {
-        if (m_active[i].withinPath(path)) {
-            Action active = m_active[i];
-            m_active.erase(m_active.begin() + i);
-            active.call(m_active[i].path());
-//            active.mute();
+void PathTracker::unTrack(std::string path) {
+    for (int i = 0; i < m_tracked.size();) {
+        Tracked& tracked = m_tracked[i];
+        if (withinPath(tracked, path)) {
+            tracked.callback();
+            m_tracked.erase(m_tracked.begin() + i);
+//            std::cout << "untrack: " << path << std::endl;
             continue;
         }
         i += 1;
     }
 }
-void ActionTracker::track(std::string callPath, Action action) {
-    action.call(callPath);
-    if (!isActive(action)) {
-        m_active.push_back(action);
+bool PathTracker::withinPath(PathTracker::Tracked& tracked, std::string path) {
+    return startsWith(tracked.path, path);
+
+}
+void PathTracker::track(std::string path, std::function<void()> callback) {
+    if (!isTracked(path)) {
+        m_tracked.push_back({path, callback});
+//        std::cout << "track: " << path << std::endl;
     }
 }
 
