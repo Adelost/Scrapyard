@@ -8,7 +8,8 @@ protected:
     void script() {
 
         static bool enable = true;
-//        on(Q, "Here I am");
+        on(QWE, S);
+//        on(W, std::string("World is that it."));
 //        on(enable, Action([&] {
 //            on(W, ArrowUp);
 //            on(A, ArrowLeft);
@@ -19,12 +20,12 @@ protected:
 //            on(LCtrl + S, S);
 //            on(LCtrl + D, D);
 //        }));
-        send("!");
+//        send("!");
     }
 public:
     void debug() {
-        spoof(A, true);
-//        spoof(X, true);
+        spoof(E, true);
+//        spoof(Q, true);
 //        spoof(S, true);
 //        spoof(D, true);
 //        spoof(S, false);

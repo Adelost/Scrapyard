@@ -4,7 +4,6 @@
 #include <functional>
 #include <set>
 #include <vector>
-#include <initializer_list>
 #include "Keys.h"
 
 namespace kh {

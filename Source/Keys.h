@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "ScanCodes.h"
 
 namespace kh {
@@ -10,23 +11,40 @@ public:
     Key() {
     }
     Key(ScanCode code) {
-        m_code = code;
-//        std::cout << toStr() << std::endl;
+        m_codes = {code};
     }
+    Key(std::vector<ScanCode> codes) {
+        m_codes = codes;
+    }
+
     std::string toStr() const {
-        return scanCodeToStr(m_code);
+        return scanCodeToStr(getCode());
     }
     ScanCode getCode() const {
-        return m_code;
+        return m_codes.empty() ? ScanCode() : m_codes[0];
+    }
+    bool contains(const ScanCode& code) const {
+        for (ScanCode ownCode : m_codes) {
+            if (code == ownCode) {
+                return true;
+            }
+        }
+        return false;
     }
     bool operator<(const Key& right) const {
-        return m_code < right.m_code;
+        return getCode() < right.getCode();
     }
     bool operator==(const Key& right) const {
-        return m_code == right.m_code;
+        for (ScanCode code : m_codes) {
+            if (right.contains(code)) {
+                return true;
+            }
+        }
+        return false;
     }
+
 private:
-    ScanCode m_code;
+    std::vector<ScanCode> m_codes;
 };
 
 class Keys {
@@ -53,6 +71,13 @@ inline Keys operator+(const Keys& keys, const Key& key) {
 
 class KeysInherit {
 public:
+    Key Ctrl = Key({ScanCode::LCtrl, ScanCode::RCtrl});
+    Key Alt = Key({ScanCode::LAlt, ScanCode::RAlt});
+    Key Shift = Key({ScanCode::LShift, ScanCode::RShift});
+    Key Win = Key({ScanCode::LWin, ScanCode::RWin});
+    Key QWE = Key({ScanCode::Q, ScanCode::W, ScanCode::E});
+
+
     Key Esc = ScanCode::Esc;
     Key Num1 = ScanCode::Num1;
     Key Num2 = ScanCode::Num2;
