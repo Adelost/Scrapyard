@@ -6,45 +6,50 @@
 
 namespace kh {
 
+/// Holds
 class Key {
 public:
     Key() {
     }
     Key(ScanCode code) {
-        m_codes = {code};
+        m_code = code;
     }
     Key(std::vector<ScanCode> codes) {
-        m_codes = codes;
+        if (!codes.empty()) {
+            m_code = codes[0];
+        }
+        m_alts = std::vector<ScanCode>(codes.begin() + 1, codes.end());
     }
-
     std::string toStr() const {
-        return scanCodeToStr(getCode());
+        return scanCodeToStr(m_code);
     }
     ScanCode getCode() const {
-        return m_codes.empty() ? ScanCode() : m_codes[0];
+        return m_code;
+    }
+    std::vector<ScanCode> getAlts() const {
+        return m_alts;
     }
     bool contains(const ScanCode& code) const {
-        for (ScanCode ownCode : m_codes) {
-            if (code == ownCode) {
+        if(getCode() == code ){
+            return true;
+        }
+        for (ScanCode alt : m_alts) {
+            if (alt == code) {
                 return true;
             }
         }
         return false;
     }
     bool operator<(const Key& right) const {
-        return getCode() < right.getCode();
+        return m_code < right.m_code;
     }
     bool operator==(const Key& right) const {
-        for (ScanCode code : m_codes) {
-            if (right.contains(code)) {
-                return true;
-            }
-        }
-        return false;
+        return m_code == right.m_code;
     }
 
 private:
-    std::vector<ScanCode> m_codes;
+    ScanCode m_code;
+    std::vector<ScanCode> m_alts;
 };
 
 class Keys {
@@ -75,7 +80,6 @@ public:
     Key Alt = Key({ScanCode::LAlt, ScanCode::RAlt});
     Key Shift = Key({ScanCode::LShift, ScanCode::RShift});
     Key Win = Key({ScanCode::LWin, ScanCode::RWin});
-    Key QWE = Key({ScanCode::Q, ScanCode::W, ScanCode::E});
 
 
     Key Esc = ScanCode::Esc;

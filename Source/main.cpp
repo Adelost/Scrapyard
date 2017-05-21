@@ -6,9 +6,7 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-
         static bool enable = true;
-        on(QWE, S);
 //        on(W, std::string("World is that it."));
 //        on(enable, Action([&] {
 //            on(W, ArrowUp);
@@ -24,11 +22,11 @@ protected:
     }
 public:
     void debug() {
-        spoof(E, true);
-//        spoof(Q, true);
-//        spoof(S, true);
-//        spoof(D, true);
-//        spoof(S, false);
+        spoof(Ctrl, true);
+        spoof(A, true);
+        spoof(A, true);
+        spoof(A, false);
+        spoof(Ctrl, false);
     }
 };
 

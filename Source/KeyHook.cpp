@@ -91,14 +91,11 @@ void KeyHook::send(Key key, bool pressed) {
     m_sendBuffer.push_back({key, pressed, false});
 }
 
-bool KeyHook::isPressed(Key key) {
-    return m_hardwareKeys.count(key) > 0;
-}
 
 std::set<Key> KeyHook::extractModKeys() {
     std::set<Key> mods;
     for (Key key : m_hardwareKeys) {
-        if (isModKey(key)) {
+        if (isModKey(key) && !isCurrentKey(key)) {
             mods.insert(key);
         }
     }
@@ -107,7 +104,7 @@ std::set<Key> KeyHook::extractModKeys() {
         mods.erase(LShift);
     }
     for (Key mod : mods) {
-        m_hardwareKeys.erase(mod);
+//        m_hardwareKeys.erase(mod);
         rawSend(mods, false);
     }
 
@@ -167,6 +164,10 @@ void KeyHook::preScript() {
         m_hardwareKeys.insert(m_currentKey);
     } else {
         m_hardwareKeys.erase(m_currentKey);
+        if (m_modStash.count(m_currentKey)) {
+            m_modStash.erase(m_currentKey);
+            mute(m_currentKey);
+        }
     }
 }
 void KeyHook::insertKeys(std::set<Key> keys) {
@@ -176,7 +177,7 @@ void KeyHook::insertKeys(std::set<Key> keys) {
     }
 }
 void KeyHook::unmute(Key key) {
-    std::cout << "unmuted: " << key.toStr() << std::endl;
+//    std::cout << "unmuted: " << key.toStr() << std::endl;
     m_mutedKeys.erase(key);
 }
 bool KeyHook::isMuted(Key key) {
@@ -185,15 +186,15 @@ bool KeyHook::isMuted(Key key) {
 
 void KeyHook::postScript() {
     bool unmuted = false;
-    if (!isMuted(currentKey())) {
-        std::cout << "=";
+    if (!isMuted(m_currentKey)) {
         if (isStashedMods()) {
             unstashMods();
         }
+        std::cout << "=";
         rawSend(currentKey(), isPressed());
     } else {
-        if (!isPressed()) {
-            unmute(currentKey());
+        if (!isPressed(m_currentKey)) {
+            unmute(m_currentKey);
             unmuted = true;
         }
     }
@@ -246,6 +247,19 @@ void KeyHook::on(Condition given, Action then, Action otherwise) {
 bool KeyHook::isWindow(std::string windowName) {
     return currentWindow() == windowName;
 }
+
+bool KeyHook::isPressed(Key key) {
+    if (m_hardwareKeys.count(key) > 0) {
+        return true;
+    }
+    for (ScanCode alt : key.getAlts()) {
+        if (m_hardwareKeys.count(alt) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool KeyHook::isPressed(Keys keys) {
     if (keys.list.empty()) {
         return true;
@@ -258,7 +272,7 @@ bool KeyHook::isPressed(Keys keys) {
     return true;
 }
 void KeyHook::mute(Key key) {
-    std::cout << "muted: " << key.toStr() << std::endl;
+//    std::cout << "muted: " << key.toStr() << std::endl;
     m_mutedKeys.insert(key);
 }
 void KeyHook::send(std::string text) {
@@ -279,11 +293,9 @@ void KeyHook::send(std::string text) {
     }
 }
 
-
 int Condition::call() {
     return m_pressCode;
 }
-
 
 Condition::Condition(Keys keys) : Condition(s_hook->getPressCode(keys)) {}
 

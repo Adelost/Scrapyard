@@ -173,10 +173,10 @@ public:
         }
         return false;
     }
-    /// Returns true if the name of the currently active window is windowName.
-    bool isWindow(std::string windowName);
     /// Returns the name of the currently active window.
     std::string currentWindow() { return m_window; }
+    /// Returns true if the name of the currently active window is windowName.
+    bool isWindow(std::string windowName);
     /// Returns the currently pressed key.
     Key currentKey() { return m_currentKey; }
     /// Returns true if the currently sent key is pressed.
@@ -211,7 +211,7 @@ public:
     bool isMuted(Key key);
     /// Returns true if key is the currently pressed key.
     bool isCurrentKey(Key key) {
-        return currentKey() == key;
+        return key.contains(currentKey().getCode());
     }
     /// Returns true if the last key in keys is the currently pressed key or if
     /// keys are empty.
