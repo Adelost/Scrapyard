@@ -159,20 +159,7 @@ public:
     /// E.g. If Ctrl and A is pressed, Ctrl + A is true.
     /// E.g. If Shift, Ctrl and A is pressed, Ctrl + A is not true since additional
     /// modifiers are pressed.
-    bool isValidMods(Keys keys) {
-        std::set<Key> extraMods = getModKeys();
-        // Shift special case
-        if (extraMods.size() == 1 && extraMods.count(LShift) > 0) {
-            return true;
-        }
-        for (Key key: keys.list) {
-            extraMods.erase(key);
-        }
-        if (extraMods.empty()) {
-            return true;
-        }
-        return false;
-    }
+    bool isValidMods(Keys keys);
     /// Returns the name of the currently active window.
     std::string currentWindow() { return m_window; }
     /// Returns true if the name of the currently active window is windowName.

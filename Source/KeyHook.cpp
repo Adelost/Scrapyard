@@ -83,6 +83,32 @@ bool startsWith(std::string str, std::string prefix) {
     return true;
 }
 
+bool containsKey(const std::set<Key>& set, Key key) {
+    if (set.count(key) > 0) {
+        return true;
+    }
+    for (ScanCode relative : key.getRelatives()) {
+        if (set.count(relative) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool eraseKey(std::set<Key>& set, Key key) {
+    if (set.count(key) > 0) {
+        set.erase(key);
+        return true;
+    }
+    for (ScanCode relative : key.getRelatives()) {
+        if (set.count(relative) > 0) {
+            set.erase(relative);
+            return true;
+        }
+    }
+    return false;
+}
+
 void KeyHook::sendBlind(Key key, bool pressed) {
     m_sendBuffer.push_back({key, pressed, true});
 }
@@ -100,15 +126,26 @@ std::set<Key> KeyHook::extractModKeys() {
         }
     }
     // Shift acts as a soft modifier
-    if (mods.size() == 1 && mods.count(LShift) > 0) {
-        mods.erase(LShift);
+    containsKey(mods, Shift);
+    if (mods.size() == 1 && containsKey(mods, Shift)) {
+        eraseKey(mods, Shift);
     }
     for (Key mod : mods) {
-//        m_hardwareKeys.erase(mod);
         rawSend(mods, false);
     }
-
     return mods;
+}
+
+bool KeyHook::isValidMods(Keys keys) {
+    std::set<Key> extraMods = getModKeys();
+    // Shift special case
+    if (extraMods.size() == 1 && containsKey(extraMods, Shift)) {
+        return true;
+    }
+    for (Key key: keys.list) {
+        eraseKey(extraMods, key);
+    }
+    return extraMods.empty();
 }
 
 std::set<Key> KeyHook::getModKeys() {
@@ -164,24 +201,26 @@ void KeyHook::preScript() {
         m_hardwareKeys.insert(m_currentKey);
     } else {
         m_hardwareKeys.erase(m_currentKey);
-        if (m_modStash.count(m_currentKey)) {
-            m_modStash.erase(m_currentKey);
+        if (containsKey(m_modStash, m_currentKey)) {
+            eraseKey(m_modStash, m_currentKey);
             mute(m_currentKey);
         }
     }
 }
+
 void KeyHook::insertKeys(std::set<Key> keys) {
     for (Key key : keys) {
         m_hardwareKeys.insert(key);
         rawSend(key, true);
     }
 }
+
 void KeyHook::unmute(Key key) {
 //    std::cout << "unmuted: " << key.toStr() << std::endl;
-    m_mutedKeys.erase(key);
+    eraseKey(m_mutedKeys, key);
 }
 bool KeyHook::isMuted(Key key) {
-    return m_mutedKeys.count(key) > 0;
+    return containsKey(m_mutedKeys, key);
 }
 
 void KeyHook::postScript() {
@@ -249,15 +288,7 @@ bool KeyHook::isWindow(std::string windowName) {
 }
 
 bool KeyHook::isPressed(Key key) {
-    if (m_hardwareKeys.count(key) > 0) {
-        return true;
-    }
-    for (ScanCode alt : key.getAlts()) {
-        if (m_hardwareKeys.count(alt) > 0) {
-            return true;
-        }
-    }
-    return false;
+    return containsKey(m_hardwareKeys, key);
 }
 
 bool KeyHook::isPressed(Keys keys) {
@@ -292,6 +323,7 @@ void KeyHook::send(std::string text) {
         }
     }
 }
+
 
 int Condition::call() {
     return m_pressCode;

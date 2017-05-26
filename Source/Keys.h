@@ -18,7 +18,7 @@ public:
         if (!codes.empty()) {
             m_code = codes[0];
         }
-        m_alts = std::vector<ScanCode>(codes.begin() + 1, codes.end());
+        m_relatives = std::vector<ScanCode>(codes.begin() + 1, codes.end());
     }
     std::string toStr() const {
         return scanCodeToStr(m_code);
@@ -26,14 +26,14 @@ public:
     ScanCode getCode() const {
         return m_code;
     }
-    std::vector<ScanCode> getAlts() const {
-        return m_alts;
+    std::vector<ScanCode> getRelatives() const {
+        return m_relatives;
     }
     bool contains(const ScanCode& code) const {
         if(getCode() == code ){
             return true;
         }
-        for (ScanCode alt : m_alts) {
+        for (ScanCode alt : m_relatives) {
             if (alt == code) {
                 return true;
             }
@@ -49,7 +49,7 @@ public:
 
 private:
     ScanCode m_code;
-    std::vector<ScanCode> m_alts;
+    std::vector<ScanCode> m_relatives;
 };
 
 class Keys {
