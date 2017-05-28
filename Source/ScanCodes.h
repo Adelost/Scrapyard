@@ -77,7 +77,7 @@ enum class ScanCode {
     Numpad3 = 81,
     Numpad0 = 82,
     NumpadDecimalPoint = 83,
-    Enter = 156,
+    NumpadEnter = 156,
     RCtrl = 157,
     PrintScreen = 170,
     NumpadDivide = 181,

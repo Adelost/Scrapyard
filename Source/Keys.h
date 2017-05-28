@@ -14,11 +14,9 @@ public:
     Key(ScanCode code) {
         m_code = code;
     }
-    Key(std::vector<ScanCode> codes) {
-        if (!codes.empty()) {
-            m_code = codes[0];
-        }
-        m_relatives = std::vector<ScanCode>(codes.begin() + 1, codes.end());
+    Key(ScanCode code, std::vector<ScanCode> alternatives) {
+        m_code = code;
+        m_alternatives = alternatives;
     }
     std::string toStr() const {
         return scanCodeToStr(m_code);
@@ -26,14 +24,14 @@ public:
     ScanCode getCode() const {
         return m_code;
     }
-    std::vector<ScanCode> getRelatives() const {
-        return m_relatives;
+    std::vector<ScanCode> getAlternatives() const {
+        return m_alternatives;
     }
     bool contains(const ScanCode& code) const {
-        if(getCode() == code ){
+        if (getCode() == code) {
             return true;
         }
-        for (ScanCode alt : m_relatives) {
+        for (ScanCode alt : m_alternatives) {
             if (alt == code) {
                 return true;
             }
@@ -49,16 +47,24 @@ public:
 
 private:
     ScanCode m_code;
-    std::vector<ScanCode> m_relatives;
+    std::vector<ScanCode> m_alternatives;
 };
 
 class Keys {
 public:
+    enum Flags {
+        Mute,
+        NoMute
+    };
     Keys() {};
     Keys(Key key) {
         list.push_back(key);
     };
+    bool hasFlag(Flags flag) {
+        return flags.count(flag) > 0;
+    };
     std::vector<Key> list;
+    std::set<Flags> flags;
 };
 
 inline Keys operator+(const Key& left, const Key& right) {
@@ -74,12 +80,19 @@ inline Keys operator+(const Keys& keys, const Key& key) {
     return copy;
 }
 
+inline Keys operator-(const Keys& keys, const Keys::Flags& flag) {
+    Keys copy = keys;
+    copy.flags.insert(flag);
+    return copy;
+}
+
 class KeysInherit {
 public:
-    Key Ctrl = Key({ScanCode::LCtrl, ScanCode::RCtrl});
-    Key Alt = Key({ScanCode::LAlt, ScanCode::RAlt});
-    Key Shift = Key({ScanCode::LShift, ScanCode::RShift});
-    Key Win = Key({ScanCode::LWin, ScanCode::RWin});
+    Key Enter = Key(ScanCode::Return, {ScanCode::NumpadEnter});
+    Key Ctrl = Key(ScanCode::LCtrl, {ScanCode::RCtrl});
+    Key Alt = Key(ScanCode::LAlt, {ScanCode::RAlt});
+    Key Shift = Key(ScanCode::LShift, {ScanCode::RShift});
+    Key Win = Key(ScanCode::LWin, {ScanCode::RWin});
 
 
     Key Esc = ScanCode::Esc;
@@ -154,7 +167,7 @@ public:
     Key Numpad3 = ScanCode::Numpad3;
     Key Numpad0 = ScanCode::Numpad0;
     Key NumpadDecimalPoint = ScanCode::NumpadDecimalPoint;
-    Key Enter = ScanCode::Enter;
+    Key NumpadEnter = ScanCode::NumpadEnter;
     Key RCtrl = ScanCode::RCtrl;
     Key PrintScreen = ScanCode::PrintScreen;
     Key NumpadDivide = ScanCode::NumpadDivide;

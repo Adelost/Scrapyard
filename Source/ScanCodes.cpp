@@ -77,7 +77,7 @@ std::string scanCodeToStr(ScanCode code) {
         case ScanCode::Numpad3: return "Numpad3";
         case ScanCode::Numpad0: return "Numpad0";
         case ScanCode::NumpadDecimalPoint: return "NumpadDecimalPoint";
-        case ScanCode::Enter: return "Enter";
+        case ScanCode::NumpadEnter: return "Enter";
         case ScanCode::RCtrl: return "RCtrl";
         case ScanCode::PrintScreen: return "PrintScreen";
         case ScanCode::NumpadDivide: return "NumpadDivide";

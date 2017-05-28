@@ -87,7 +87,7 @@ bool containsKey(const std::set<Key>& set, Key key) {
     if (set.count(key) > 0) {
         return true;
     }
-    for (ScanCode relative : key.getRelatives()) {
+    for (ScanCode relative : key.getAlternatives()) {
         if (set.count(relative) > 0) {
             return true;
         }
@@ -100,7 +100,7 @@ bool eraseKey(std::set<Key>& set, Key key) {
         set.erase(key);
         return true;
     }
-    for (ScanCode relative : key.getRelatives()) {
+    for (ScanCode relative : key.getAlternatives()) {
         if (set.count(relative) > 0) {
             set.erase(relative);
             return true;
@@ -270,7 +270,7 @@ void KeyHook::on(Condition given, Action then, Action otherwise) {
     std::string path = m_callPath;
     int callCode = given.call();
     if (callCode == 1) {
-        if (given.isMuting()) {
+        if (given.hasFlag(Keys::Mute)) {
             mute(currentKey());
         }
         unTrack(path + "2");
@@ -329,7 +329,12 @@ int Condition::call() {
     return m_pressCode;
 }
 
-Condition::Condition(Keys keys) : Condition(s_hook->getPressCode(keys)) {}
+Condition::Condition(Keys keys) : Condition() {
+    if(!keys.hasFlag(Keys::NoMute)) {
+        m_flags.insert(Keys::Mute);
+    }
+    m_pressCode = s_hook->getPressCode(keys);
+}
 
 void Action::call(std::string path) {
     m_path = path;

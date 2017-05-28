@@ -17,20 +17,22 @@ public:
     Condition(bool active) {
         m_pressCode = active ? 1 : 0;
     }
-    Condition(int pressCode) {
-        m_muting = true;
+    Condition(int pressCode, std::set<Keys::Flags> flags = {}) {
+        m_flags = flags;
         m_pressCode = pressCode;
     }
     Condition(std::function<int()> callback) : Condition(callback()) {}
     Condition(std::function<bool()> callback) : Condition(callback()) {}
     Condition(Keys keys);
     Condition(Key key) : Condition(Keys(key)) {}
+    bool hasFlag(Keys::Flags flag) {
+        return m_flags.count(flag) > 0;
+    };
     int call();
-    bool isMuting() { return m_muting; }
 
 private:
     int m_pressCode;
-    bool m_muting = false;
+    std::set<Keys::Flags> m_flags;
 };
 
 class Action {
@@ -95,6 +97,10 @@ public:
     void start();
     /// Simulates a key event. Useful for debugging.
     void spoof(Key key, bool pressed);
+    void spoof(Key key) {
+        spoof(key, true);
+        spoof(key, false);
+    };
     /// If else condition based on either bool or pressCode.
     /// Activates action "then" if condition is true or pressCode is 1 (activated),
     /// or activates "otherwise" (optional) if false or pressCode is 0 (disabled).
@@ -110,11 +116,8 @@ public:
     bool isPressed(Keys keys);
     /// Similar to isPressed() but does not allow any additional keys
     /// to be pressed.
-    int isExactly(Keys keys) {
-        if (!isPressed()) {
-            false;
-        }
-        return m_hardwareKeys.size() == keys.list.size();
+    bool isExactly(Keys keys) {
+        return isPressed(keys) && m_hardwareKeys.size() == keys.list.size();
     }
     /// Returns true if active and the last key in keys
     /// is the key currently pressed.
@@ -177,6 +180,10 @@ public:
         for (Key key : keys.list) {
             send(key, pressed);
         }
+    }
+    void send(Keys keys) {
+        send(keys, true);
+        send(keys, false);
     }
     /// Sends text
     void send(std::string text);
