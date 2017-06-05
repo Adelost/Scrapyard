@@ -240,6 +240,7 @@ public:
     void unTrack(std::string path) {
         m_tracker.unTrack(path);
     }
+    void every(int ms, std::function<void()> callback);
 
 private:
 //    std::string callPath() { return m_callPath; }
@@ -273,6 +274,7 @@ private:
 
 protected:
     virtual void script() = 0;
+    virtual void init() = 0;
 
     void insertKeys(std::set<Key> keys);
     void rawSend(Key key, bool pressed);

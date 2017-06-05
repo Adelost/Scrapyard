@@ -42,6 +42,8 @@ set(SOURCES
         Source/Utils/__internal__/_WindowsConsole.cpp
         Source/Utils/__internal__/_WindowsConsole.h
         #        Source/ScanCodes.cpp
+        Source/OSWrap.h
+        Source/OSWrap.cpp
         Source/Keys.h
         Source/KeyHook.h
         Source/KeyHook.cpp

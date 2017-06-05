@@ -1,5 +1,6 @@
 #include "KeyHook.h"
-#include "Utils/List.h"
+#include "OSWrap.h"
+#include <thread>
 
 #ifdef _WIN32_
 
@@ -53,20 +54,6 @@ ScanCode charToScanCode(char c) {
     return (ScanCode)c;
 #endif
 }
-
-std::string getActiveWindow() {
-#ifdef _WIN32_
-    char wnd_title[1024];
-    HWND hwnd = GetForegroundWindow();
-    GetWindowTextA(hwnd, wnd_title, sizeof(wnd_title));
-    std::string path(wnd_title);
-    std::string title = path.substr(path.find_last_of("\\/") + 1, std::string::npos);
-    return title;
-#else
-    return "";
-#endif
-}
-
 
 static KeyHook* s_hook;
 
@@ -168,6 +155,7 @@ void KeyHook::start() {
 #ifdef _WIN32_
     s_context = interception_create_context();
     interception_set_filter(s_context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_ALL);
+    init();
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
         s_hook = this;
@@ -325,12 +313,25 @@ void KeyHook::send(std::string text) {
 }
 
 
+
+void KeyHook::every(int ms, std::function<void()> callback) {
+    std::thread t1([=] {
+//        while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        std::cout << "task1 says: " << std::endl;
+
+//            callback();
+//        }
+    });
+}
+
+
 int Condition::call() {
     return m_pressCode;
 }
 
 Condition::Condition(Keys keys) : Condition() {
-    if(!keys.hasFlag(Keys::NoMute)) {
+    if (!keys.hasFlag(Keys::NoMute)) {
         m_flags.insert(Keys::Mute);
     }
     m_pressCode = s_hook->getPressCode(keys);
