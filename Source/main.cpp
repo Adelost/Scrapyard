@@ -1,6 +1,6 @@
 #include "KeyHook.h"
-#include "OSWrap.h"
 
+#include "thread"
 
 using namespace std;
 using namespace kh;
@@ -10,9 +10,9 @@ protected:
     void script() {
         Sense sense;
 //        Color c = getPixel(cursorPos());
-        std::cout << "Window: " << currentWindow() << std::endl;
+//        std::cout << "Window: " << currentWindow() << std::endl;
 
-        std::cout << "Color: " << sense.pixel(sense.cursor()).toHex() << std::endl;
+//        std::cout << "Color: " << sense.pixel(sense.cursor()).toHex() << std::endl;
 
 //        HDC dc = GetDC(NULL);
 //        COLORREF color = GetPixel(dc, 0, 0);
@@ -21,7 +21,9 @@ protected:
 //        int green = GetGValue(color);
 //        int blue = GetBValue(color);
 
-
+        on(Q, Action([&] {
+            exit();
+        }));
 //        static bool enable = true;
 ////        on(isWindow("Age of Empires II: HD Edition"), Action([&] {
 //            on(Enter - Keys::NoMute, enable);
@@ -41,16 +43,15 @@ protected:
 
 //        }));
     }
-    void init(){
-        every(1000, []{
-            std::cout << "task1 says: "  << std::endl;
+    void init() {
+        every(1000, [&] {
+            std::cout << "run" << std::endl;
+//            send(Q);
         });
-
     }
 public:
     void debug() {
-
-//        spoof(Alt, true);
+//        spoof(Alt, true)q;
 //        spoof(A, true);
         spoof(W);
 //        spoof(Return);
@@ -72,13 +73,15 @@ public:
     }
 };
 
-
 int main() {
     MyKeyHook hook;
 //    hook.debug();
 
     hook.start();
 
+
+//    std::thread t1(foo);
+//    t1.join();
 
 
 

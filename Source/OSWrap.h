@@ -42,15 +42,19 @@ class Sense {
 public:
     Sense();
     ~Sense();
+    void init();
+    void clear();
     Color pixel(Point point);
     Point window();
     Point cursor();
 
 private:
+    bool m_inited = false;
     HWND m_hwnd;
     HDC m_dc;
     Point m_cursor;
     Point m_window;
+
 };
 
 }

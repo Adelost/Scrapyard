@@ -31,14 +31,11 @@ Point mapToGlobal(Point& windowPoint, Point& windowPos) {
     return windowPoint + windowPos;
 }
 Sense::Sense() {
-    m_hwnd = GetForegroundWindow();
-    m_dc = GetDC(nullptr);
-    m_window = getActiveWindowPos();
-    auto cursorGlobal = getCursorPos();
-    m_cursor = mapToWindow(cursorGlobal, m_window);
 }
 Sense::~Sense() {
-    ReleaseDC(NULL, m_dc);
+    if (m_inited) {
+        clear();
+    }
 }
 Color Sense::pixel(Point point) {
     std::cout << "Point: " << point.x << " " << point.y << std::endl;
@@ -56,5 +53,17 @@ Point Sense::window() {
 }
 Point Sense::cursor() {
     return m_cursor;
+}
+void Sense::init() {
+    m_inited = true;
+    m_hwnd = GetForegroundWindow();
+    m_dc = GetDC(nullptr);
+    m_window = getActiveWindowPos();
+    auto cursorGlobal = getCursorPos();
+    m_cursor = mapToWindow(cursorGlobal, m_window);
+}
+void Sense::clear() {
+    ReleaseDC(NULL, m_dc);
+    m_inited = false;
 }
 }

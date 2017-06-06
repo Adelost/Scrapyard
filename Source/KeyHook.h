@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include "Keys.h"
+#include "OSWrap.h"
 
 namespace kh {
 
@@ -240,7 +241,11 @@ public:
     void unTrack(std::string path) {
         m_tracker.unTrack(path);
     }
+    void exit() {
+        m_exiting = true;
+    }
     void every(int ms, std::function<void()> callback);
+    Sense sense;
 
 private:
 //    std::string callPath() { return m_callPath; }
@@ -259,6 +264,8 @@ private:
         insertKeys(m_modStash);
         m_modStash.clear();
     }
+    void sendBuffer();
+    void exitThreads() const;
 
     bool m_pressed;
     std::string m_window;
@@ -270,7 +277,8 @@ private:
     bool m_debug = false;
     std::vector<QueuedKey> m_sendBuffer;
     std::set<Key> m_modStash;
-
+    bool m_inited = false;
+    bool m_exiting = false;
 
 protected:
     virtual void script() = 0;
@@ -278,6 +286,7 @@ protected:
 
     void insertKeys(std::set<Key> keys);
     void rawSend(Key key, bool pressed);
+
 };
 
 }

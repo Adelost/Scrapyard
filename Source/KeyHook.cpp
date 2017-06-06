@@ -1,6 +1,7 @@
 #include "KeyHook.h"
 #include "OSWrap.h"
 #include <thread>
+#include <mutex>
 
 #ifdef _WIN32_
 
@@ -56,7 +57,8 @@ ScanCode charToScanCode(char c) {
 }
 
 static KeyHook* s_hook;
-
+static std::mutex s_mutex;
+static std::vector<std::thread*> s_threads;
 
 bool startsWith(std::string str, std::string prefix) {
     if (str.length() < prefix.length()) {
@@ -155,19 +157,40 @@ void KeyHook::start() {
 #ifdef _WIN32_
     s_context = interception_create_context();
     interception_set_filter(s_context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_ALL);
-    init();
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
+        std::lock_guard<std::mutex> lock(s_mutex);
+        if (m_exiting) {
+            break;
+        }
         s_hook = this;
+        if(!s_hook->m_inited){
+            s_hook->init();
+            m_inited = true;
+        }
         s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(s_stroke);
         s_hook->m_pressed = interceptionGetIsPressed(s_stroke);
         s_hook->m_window = getActiveWindow();
+        s_hook->sense.init();
         s_hook->preScript();
         s_hook->script();
         s_hook->postScript();
+        s_hook->sense.clear();
+        if (m_exiting) {
+            break;
+        }
     }
+    exitThreads();
+    std::cout << "exit main thread" << std::endl;
     interception_destroy_context(s_context);
 #endif
+}
+void KeyHook::exitThreads() const {
+    for (std::thread* thread : s_threads) {
+        std::cout << "exit thread " << thread->get_id() << std::endl;
+        thread->join();
+        delete thread;
+    }
 }
 
 void KeyHook::spoof(Key key, bool pressed) {
@@ -225,7 +248,13 @@ void KeyHook::postScript() {
             unmuted = true;
         }
     }
-    std::set<Key> modKeys;
+    sendBuffer();
+    if (unmuted && isStashedMods()) {
+        unstashMods();
+    }
+}
+
+void KeyHook::sendBuffer() {
     for (QueuedKey q: m_sendBuffer) {
         if (q.blind) {
             if (isStashedMods()) {
@@ -239,13 +268,9 @@ void KeyHook::postScript() {
             rawSend(q.key, q.pressed);
         }
     }
-
-    if (unmuted && isStashedMods()) {
-        unstashMods();
-    }
-
     m_sendBuffer.clear();
 }
+
 void KeyHook::rawSend(Key key, bool pressed) {
     if (!m_debug) {
 #ifdef _WIN32_
@@ -313,16 +338,27 @@ void KeyHook::send(std::string text) {
 }
 
 
-
 void KeyHook::every(int ms, std::function<void()> callback) {
-    std::thread t1([=] {
-//        while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-        std::cout << "task1 says: " << std::endl;
+    std::thread* thread = new std::thread([&, ms, callback] {
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+            std::lock_guard<std::mutex> lock(s_mutex);
+            if (m_exiting) {
+                break;
+            }
+            sense.init();
+            callback();
+            sendBuffer();
+            sense.clear();
+            if (m_exiting) {
+                break;
+            }
 
-//            callback();
-//        }
+//            std::cout << "task1 says:s " <<  << std::endl;
+        }
     });
+    s_threads.push_back(thread);
+    std::cout << "thread created" << std::endl;
 }
 
 
