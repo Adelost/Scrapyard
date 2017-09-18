@@ -89,6 +89,7 @@ private:
     std::vector<Tracked> m_tracked;
 };
 
+
 class KeyHook : public KeysInherit {
 public:
     KeyHook() {}
@@ -157,7 +158,7 @@ public:
         }
         return 2;
     }
-    /// Returns true if all modifiers in keys, if any, is pressed.
+    /// Returns true if all modifiers in keys (if any) is pressed.
     /// Returns false if any additional modifiers are pressed not part of keys.
     /// Shift is a special case, if Shift is the only additional modifier returns true
     /// E.g. If Ctrl and A is pressed, Ctrl + A is true.
@@ -202,7 +203,7 @@ public:
     }
     /// Unmutes a key,
     void unmute(Key key);
-    /// Returns if has been muted
+    /// Returns true if key has been muted
     bool isMuted(Key key);
     /// Returns true if key is the currently pressed key.
     bool isCurrentKey(Key key) {
@@ -244,8 +245,11 @@ public:
     void exit() {
         m_exiting = true;
     }
+    void releaseAllKeys();
     void every(int ms, std::function<void()> callback);
     Sense sense;
+
+    Action Exit = Action([&] { exit(); });
 
 private:
 //    std::string callPath() { return m_callPath; }
@@ -268,6 +272,8 @@ private:
     void exitThreads() const;
 
     bool m_pressed;
+    bool m_isMouse;
+    bool m_isKeyboard;
     std::string m_window;
     Key m_currentKey;
     std::string m_callPath = "";
@@ -287,6 +293,7 @@ protected:
     void insertKeys(std::set<Key> keys);
     void rawSend(Key key, bool pressed);
 
+    void readInput() const;
 };
 
 }

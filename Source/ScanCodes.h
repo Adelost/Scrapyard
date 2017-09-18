@@ -94,7 +94,12 @@ enum class ScanCode {
     Delete = 211,
     LWin = 219,
     RWin = 220,
-    Menu = 221
+    Menu = 221,
+    MouseLeft = 1001,
+    MouseRight = 1002,
+    MouseMiddle = 1003,
+    MouseForward = 1004,
+    MouseBack = 1005
 };
 
 std::string scanCodeToStr(ScanCode code);

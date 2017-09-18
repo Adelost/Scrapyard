@@ -1,21 +1,27 @@
 #include "KeyHook.h"
 #include "OSWrap.h"
+#include "MouseKeyMapper.h"
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 
 #ifdef _WIN32_
 
 #include <Windows.h>
 #include <interception.h>
+#include <unordered_map>
+#include <midles.h>
+
 
 #endif
 
 namespace kh {
 
 #ifdef _WIN32_
-InterceptionKeyStroke s_stroke;
+InterceptionStroke s_stroke;
 InterceptionContext s_context;
 InterceptionDevice s_device;
+MouseKeyMapper s_mouseKeyMapper;
 
 int interceptionGetCurrentKey(InterceptionKeyStroke stroke) {
     int code = stroke.code;
@@ -32,6 +38,12 @@ bool interceptionGetIsPressed(InterceptionKeyStroke stroke) {
     }
     return state == 0;
 }
+
+void interceptionGetMouseStroke(InterceptionMouseStroke* mouseStroke, Key* key, bool* isPressed) {
+    int state = mouseStroke->state;
+    s_mouseKeyMapper.codeToKey(state, key, isPressed);
+}
+
 void interceptionSend(Key key, bool pressed) {
     int code = (int) key.getCode();
     int state = !pressed;
@@ -39,10 +51,10 @@ void interceptionSend(Key key, bool pressed) {
         code -= 128;
         state += 2;
     }
-    InterceptionKeyStroke stroke = s_stroke;
+    InterceptionKeyStroke stroke = *(InterceptionKeyStroke*) &s_stroke;
     stroke.code = (unsigned short) code;
     stroke.state = (unsigned short) state;
-    interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);;
+    interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
 }
 #endif
 
@@ -70,32 +82,6 @@ bool startsWith(std::string str, std::string prefix) {
         }
     }
     return true;
-}
-
-bool containsKey(const std::set<Key>& set, Key key) {
-    if (set.count(key) > 0) {
-        return true;
-    }
-    for (ScanCode relative : key.getAlternatives()) {
-        if (set.count(relative) > 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool eraseKey(std::set<Key>& set, Key key) {
-    if (set.count(key) > 0) {
-        set.erase(key);
-        return true;
-    }
-    for (ScanCode relative : key.getAlternatives()) {
-        if (set.count(relative) > 0) {
-            set.erase(relative);
-            return true;
-        }
-    }
-    return false;
 }
 
 void KeyHook::sendBlind(Key key, bool pressed) {
@@ -157,6 +143,7 @@ void KeyHook::start() {
 #ifdef _WIN32_
     s_context = interception_create_context();
     interception_set_filter(s_context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_ALL);
+//    interception_set_filter(s_context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
         std::lock_guard<std::mutex> lock(s_mutex);
@@ -164,13 +151,13 @@ void KeyHook::start() {
             break;
         }
         s_hook = this;
-        if(!s_hook->m_inited){
+        if (!s_hook->m_inited) {
             s_hook->init();
             m_inited = true;
         }
-        s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(s_stroke);
-        s_hook->m_pressed = interceptionGetIsPressed(s_stroke);
-        s_hook->m_window = getActiveWindow();
+
+        readInput();
+
         s_hook->sense.init();
         s_hook->preScript();
         s_hook->script();
@@ -180,11 +167,25 @@ void KeyHook::start() {
             break;
         }
     }
+    releaseAllKeys();
     exitThreads();
     std::cout << "exit main thread" << std::endl;
     interception_destroy_context(s_context);
 #endif
 }
+void KeyHook::readInput() const {
+    s_hook->m_isMouse = (bool) interception_is_mouse(s_device);
+    s_hook->m_isKeyboard = (bool) interception_is_keyboard(s_device);
+    if (s_hook->m_isMouse) {
+        interceptionGetMouseStroke((InterceptionMouseStroke*) &s_stroke, &s_hook->m_currentKey, &s_hook->m_pressed);
+    } else {
+        InterceptionKeyStroke& keyStroke = *(InterceptionKeyStroke*) &s_stroke;
+        s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(keyStroke);
+        s_hook->m_pressed = interceptionGetIsPressed(keyStroke);
+    }
+    s_hook->m_window = getActiveWindow();
+}
+
 void KeyHook::exitThreads() const {
     for (std::thread* thread : s_threads) {
         std::cout << "exit thread " << thread->get_id() << std::endl;
@@ -360,6 +361,12 @@ void KeyHook::every(int ms, std::function<void()> callback) {
     s_threads.push_back(thread);
     std::cout << "thread created" << std::endl;
 }
+void KeyHook::releaseAllKeys() {
+    for (Key key : m_hardwareKeys) {
+        rawSend(key, false);
+    }
+    m_hardwareKeys.clear();
+}
 
 
 int Condition::call() {
@@ -367,7 +374,7 @@ int Condition::call() {
 }
 
 Condition::Condition(Keys keys) : Condition() {
-    if (!keys.hasFlag(Keys::NoMute)) {
+    if (!keys.hasFlag(Keys::Send)) {
         m_flags.insert(Keys::Mute);
     }
     m_pressCode = s_hook->getPressCode(keys);

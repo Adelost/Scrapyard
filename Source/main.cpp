@@ -8,52 +8,33 @@ using namespace kh;
 class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
-        Sense sense;
-//        Color c = getPixel(cursorPos());
-//        std::cout << "Window: " << currentWindow() << std::endl;
-
-//        std::cout << "Color: " << sense.pixel(sense.cursor()).toHex() << std::endl;
-
-//        HDC dc = GetDC(NULL);
-//        COLORREF color = GetPixel(dc, 0, 0);
-//        ReleaseDC(NULL, dc);
-//        int red = GetRValue(color);
-//        int green = GetGValue(color);
-//        int blue = GetBValue(color);
-
-        on(Q, Action([&] {
-            exit();
+        static bool enable = true;
+        on(isWindow("Company Of Heroes 2"), Action([&] {
+            on(Enter - Keys::Send, enable);
+            on(Ctrl + Enter, enable);
+            on(enable, Action([&] {
+                on(W, ArrowUp);
+                on(A, ArrowLeft);
+                on(S, ArrowDown);
+                on(D, ArrowRight);
+                on(Ctrl + W, W);
+                on(Ctrl + A, A);
+                on(Ctrl + S, S);
+                on(Ctrl + D, D);
+            }));
         }));
-//        static bool enable = true;
-////        on(isWindow("Age of Empires II: HD Edition"), Action([&] {
-//            on(Enter - Keys::NoMute, enable);
-//            on(Ctrl + Enter, enable);
-//            on(enable, Action([&] {
-////          on(, Action([&] {
-//                on(W, ArrowUp);
-//                on(A, ArrowLeft);
-//                on(S, ArrowDown);
-//                on(D, ArrowRight);
-//                on(Ctrl + W, W);
-//                on(Ctrl + A, A);
-//                on(Ctrl + S, S);
-//                on(Ctrl + D, D);
-////          }));
-//            }));
-
-//        }));
     }
     void init() {
-        every(1000, [&] {
-            std::cout << "run" << std::endl;
-//            send(Q);
-        });
+//        every(100, [&] {
+//            std::cout << sense.pixel(sense.cursor()).toHex() << std::endl;
+////            send(Q);
+//        });
     }
 public:
     void debug() {
-//        spoof(Alt, true)q;
+        spoof(MouseForward, true);
 //        spoof(A, true);
-        spoof(W);
+//        spoof(W);
 //        spoof(Return);
 //        spoof(W);
 //        spoof(Return);

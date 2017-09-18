@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include "ScanCodes.h"
 
 namespace kh {
@@ -54,7 +55,7 @@ class Keys {
 public:
     enum Flags {
         Mute,
-        NoMute
+        Send
     };
     Keys() {};
     Keys(Key key) {
@@ -86,6 +87,12 @@ inline Keys operator-(const Keys& keys, const Keys::Flags& flag) {
     return copy;
 }
 
+
+bool containsKey(const std::set<Key>& set, Key key);
+
+bool eraseKey(std::set<Key>& set, Key key);
+
+
 class KeysInherit {
 public:
     Key Enter = Key(ScanCode::Return, {ScanCode::NumpadEnter});
@@ -93,7 +100,6 @@ public:
     Key Alt = Key(ScanCode::LAlt, {ScanCode::RAlt});
     Key Shift = Key(ScanCode::LShift, {ScanCode::RShift});
     Key Win = Key(ScanCode::LWin, {ScanCode::RWin});
-
 
     Key Esc = ScanCode::Esc;
     Key Num1 = ScanCode::Num1;
@@ -185,5 +191,11 @@ public:
     Key LWin = ScanCode::LWin;
     Key RWin = ScanCode::RWin;
     Key Menu = ScanCode::Menu;
+
+    Key MouseLeft = ScanCode::MouseLeft;
+    Key MouseRight = ScanCode::MouseRight;
+    Key MouseMiddle = ScanCode::MouseMiddle;
+    Key MouseForward = ScanCode::MouseForward;
+    Key MouseBack = ScanCode::MouseBack;
 };
 }

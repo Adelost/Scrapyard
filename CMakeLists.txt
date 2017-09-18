@@ -42,13 +42,17 @@ set(SOURCES
         Source/Utils/__internal__/_WindowsConsole.cpp
         Source/Utils/__internal__/_WindowsConsole.h
         #        Source/ScanCodes.cpp
+        Source/MouseKeyMapper.h
+        Source/MouseKeyMapper.cpp
         Source/OSWrap.h
         Source/OSWrap.cpp
         Source/Keys.h
+        Source/Keys.cpp
         Source/KeyHook.h
         Source/KeyHook.cpp
+        Source/ScanCodes.h
         Source/ScanCodes.cpp
-        Source/ScanCodes.h)
+        )
 
 include_directories(Libs/Interception)
 link_directories(Libs/Interception/x64)
