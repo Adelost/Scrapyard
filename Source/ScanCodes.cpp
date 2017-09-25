@@ -95,6 +95,15 @@ std::string scanCodeToStr(ScanCode code) {
         case ScanCode::LWin: return "LWin";
         case ScanCode::RWin: return "RWin";
         case ScanCode::Menu: return "Menu";
+        case ScanCode::MouseLeft: return "MouseLeft";
+        case ScanCode::MouseRight: return "MouseRight";
+        case ScanCode::MouseMiddle: return "MouseMiddle";
+        case ScanCode::MouseForward: return "MouseForward";
+        case ScanCode::MouseBack: return "MouseBack";
+        case ScanCode::MouseScrollDown: return "MouseScrollDown";
+        case ScanCode::MouseScrollUp: return "MouseScrollUp";
+        case ScanCode::MouseTiltLeft: return "MouseTiltLeft";
+        case ScanCode::MouseTiltRight: return "MouseTiltRight";
         default: break;
     }
     return std::to_string(rawCode);

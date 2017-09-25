@@ -4,24 +4,31 @@
 #include <thread>
 #include <mutex>
 #include <unordered_map>
+#include <exception>
 
 #ifdef _WIN32_
 
 #include <Windows.h>
 #include <interception.h>
 #include <unordered_map>
-#include <midles.h>
 
 
 #endif
 
 namespace kh {
 
+namespace Exceptions {
+struct UnkownReading {
+};
+}
+
+
 #ifdef _WIN32_
 InterceptionStroke s_stroke;
 InterceptionContext s_context;
 InterceptionDevice s_device;
 MouseKeyMapper s_mouseKeyMapper;
+
 
 int interceptionGetCurrentKey(InterceptionKeyStroke stroke) {
     int code = stroke.code;
@@ -41,20 +48,44 @@ bool interceptionGetIsPressed(InterceptionKeyStroke stroke) {
 
 void interceptionGetMouseStroke(InterceptionMouseStroke* mouseStroke, Key* key, bool* isPressed) {
     int state = mouseStroke->state;
-    s_mouseKeyMapper.codeToKey(state, key, isPressed);
+    int roll = mouseStroke->rolling;
+    if (state == 0 || mouseStroke->flags != 0 || mouseStroke->information != 0) {
+        throw Exceptions::UnkownReading();
+    }
+    if (s_mouseKeyMapper.hasScrollCodeFor(state, roll)) {
+        throw Exceptions::UnkownReading();
+    }
+    s_mouseKeyMapper.getCode(state, key, isPressed);
+}
+
+bool isMouseKey(Key key) {
+    int value = (int) key.getCode();
+    return value > 1000;
+}
+
+bool isKeyboardKey(Key key) {
+    int value = (int) key.getCode();
+    return value < 1000;
 }
 
 void interceptionSend(Key key, bool pressed) {
-    int code = (int) key.getCode();
-    int state = !pressed;
-    if (code >= 128) {
-        code -= 128;
-        state += 2;
+    if (isMouseKey(key)) {
+        InterceptionMouseStroke stroke = {0};
+        s_mouseKeyMapper.getState(key.getCode(), pressed, &stroke);
+        interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
     }
-    InterceptionKeyStroke stroke = *(InterceptionKeyStroke*) &s_stroke;
-    stroke.code = (unsigned short) code;
-    stroke.state = (unsigned short) state;
-    interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
+    if (isKeyboardKey(key)) {
+        int code = (int) key.getCode();
+        int state = !pressed;
+        if (code >= 128) {
+            code -= 128;
+            state += 2;
+        }
+        InterceptionKeyStroke stroke = {0};
+        stroke.code = (unsigned short) code;
+        stroke.state = (unsigned short) state;
+        interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
+    }
 }
 #endif
 
@@ -143,28 +174,28 @@ void KeyHook::start() {
 #ifdef _WIN32_
     s_context = interception_create_context();
     interception_set_filter(s_context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_ALL);
-//    interception_set_filter(s_context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
+    interception_set_filter(s_context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
+        std::cout << "Device: " << s_device << std::endl;
         std::lock_guard<std::mutex> lock(s_mutex);
         if (m_exiting) {
             break;
         }
-        s_hook = this;
-        if (!s_hook->m_inited) {
-            s_hook->init();
-            m_inited = true;
+        initHook();
+        try {
+            readInput();
+            s_hook->sense.init();
+            s_hook->preScript();
+            s_hook->script();
+            s_hook->postScript();
+            s_hook->sense.clear();
+            if (m_exiting) {
+                break;
+            }
         }
-
-        readInput();
-
-        s_hook->sense.init();
-        s_hook->preScript();
-        s_hook->script();
-        s_hook->postScript();
-        s_hook->sense.clear();
-        if (m_exiting) {
-            break;
+        catch (Exceptions::UnkownReading e) {
+            interception_send(s_context, s_device, (InterceptionStroke const*) &s_stroke, 1);
         }
     }
     releaseAllKeys();
@@ -173,12 +204,17 @@ void KeyHook::start() {
     interception_destroy_context(s_context);
 #endif
 }
+void KeyHook::initHook() {
+    s_hook = this;
+    if (!s_hook->m_inited) {
+        s_hook->init();
+        m_inited = true;
+    }
+}
 void KeyHook::readInput() const {
-    s_hook->m_isMouse = (bool) interception_is_mouse(s_device);
-    s_hook->m_isKeyboard = (bool) interception_is_keyboard(s_device);
-    if (s_hook->m_isMouse) {
+    if (interception_is_mouse(s_device)) {
         interceptionGetMouseStroke((InterceptionMouseStroke*) &s_stroke, &s_hook->m_currentKey, &s_hook->m_pressed);
-    } else {
+    } else if (interception_is_keyboard(s_device)) {
         InterceptionKeyStroke& keyStroke = *(InterceptionKeyStroke*) &s_stroke;
         s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(keyStroke);
         s_hook->m_pressed = interceptionGetIsPressed(keyStroke);

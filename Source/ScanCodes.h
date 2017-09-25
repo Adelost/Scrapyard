@@ -95,11 +95,17 @@ enum class ScanCode {
     LWin = 219,
     RWin = 220,
     Menu = 221,
+
     MouseLeft = 1001,
     MouseRight = 1002,
     MouseMiddle = 1003,
     MouseForward = 1004,
-    MouseBack = 1005
+    MouseBack = 1005,
+
+    MouseScrollDown = 1100,
+    MouseScrollUp = 1101,
+    MouseTiltLeft = 1102,
+    MouseTiltRight = 1103
 };
 
 std::string scanCodeToStr(ScanCode code);

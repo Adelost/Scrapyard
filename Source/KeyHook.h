@@ -12,6 +12,7 @@ namespace kh {
 
 class KeyHook;
 
+
 class Condition {
 public:
     Condition() : Condition(true) {}
@@ -272,8 +273,6 @@ private:
     void exitThreads() const;
 
     bool m_pressed;
-    bool m_isMouse;
-    bool m_isKeyboard;
     std::string m_window;
     Key m_currentKey;
     std::string m_callPath = "";
@@ -294,6 +293,7 @@ protected:
     void rawSend(Key key, bool pressed);
 
     void readInput() const;
+    void initHook();
 };
 
 }
