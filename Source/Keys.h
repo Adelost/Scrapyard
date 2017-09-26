@@ -55,7 +55,7 @@ class Keys {
 public:
     enum Flags {
         Mute,
-        Send
+        NoMute
     };
     Keys() {};
     Keys(Key key) {

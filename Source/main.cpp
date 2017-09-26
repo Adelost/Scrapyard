@@ -9,9 +9,8 @@ class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
         static bool enable = true;
-        on(MouseBack, MouseLeft);
         on(isWindow("Company Of Heroes 2"), Action([&] {
-            on(Enter - Keys::Send, enable);
+            on(Enter - Keys::NoMute, enable);
             on(Ctrl + Enter, enable);
             on(enable, Action([&] {
                 on(W, ArrowUp);

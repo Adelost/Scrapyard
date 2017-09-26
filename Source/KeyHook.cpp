@@ -1,3 +1,10 @@
+#ifdef _WIN32_
+
+#include <Windows.h>
+#include <interception.h>
+
+#endif
+
 #include "KeyHook.h"
 #include "OSWrap.h"
 #include "MouseKeyMapper.h"
@@ -5,15 +12,9 @@
 #include <mutex>
 #include <unordered_map>
 #include <exception>
-
-#ifdef _WIN32_
-
-#include <Windows.h>
-#include <interception.h>
+#include <memory>
 #include <unordered_map>
 
-
-#endif
 
 namespace kh {
 
@@ -27,6 +28,8 @@ struct UnkownReading {
 InterceptionStroke s_stroke;
 InterceptionContext s_context;
 InterceptionDevice s_device;
+std::unique_ptr<InterceptionDevice> s_mouseDevice;
+std::unique_ptr<InterceptionDevice> s_keyboardDevice;
 MouseKeyMapper s_mouseKeyMapper;
 
 
@@ -70,21 +73,25 @@ bool isKeyboardKey(Key key) {
 
 void interceptionSend(Key key, bool pressed) {
     if (isMouseKey(key)) {
-        InterceptionMouseStroke stroke = {0};
-        s_mouseKeyMapper.getState(key.getCode(), pressed, &stroke);
-        interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
+        if (s_mouseDevice) {
+            InterceptionMouseStroke stroke = {0};
+            s_mouseKeyMapper.getState(key.getCode(), pressed, &stroke);
+            interception_send(s_context, *s_mouseDevice, (InterceptionStroke const*) &stroke, 1);
+        }
     }
     if (isKeyboardKey(key)) {
-        int code = (int) key.getCode();
-        int state = !pressed;
-        if (code >= 128) {
-            code -= 128;
-            state += 2;
+        if (s_keyboardDevice) {
+            int code = (int) key.getCode();
+            int state = !pressed;
+            if (code >= 128) {
+                code -= 128;
+                state += 2;
+            }
+            InterceptionKeyStroke stroke = {0};
+            stroke.code = (unsigned short) code;
+            stroke.state = (unsigned short) state;
+            interception_send(s_context, *s_keyboardDevice, (InterceptionStroke const*) &stroke, 1);
         }
-        InterceptionKeyStroke stroke = {0};
-        stroke.code = (unsigned short) code;
-        stroke.state = (unsigned short) state;
-        interception_send(s_context, s_device, (InterceptionStroke const*) &stroke, 1);
     }
 }
 #endif
@@ -177,7 +184,6 @@ void KeyHook::start() {
     interception_set_filter(s_context, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_ALL);
     while (interception_receive(s_context, s_device = interception_wait(s_context), (InterceptionStroke*) &s_stroke,
                                 1) > 0) {
-        std::cout << "Device: " << s_device << std::endl;
         std::lock_guard<std::mutex> lock(s_mutex);
         if (m_exiting) {
             break;
@@ -213,8 +219,14 @@ void KeyHook::initHook() {
 }
 void KeyHook::readInput() const {
     if (interception_is_mouse(s_device)) {
+        if (!s_mouseDevice) {
+            s_mouseDevice = std::make_unique<InterceptionDevice>(s_device);
+        }
         interceptionGetMouseStroke((InterceptionMouseStroke*) &s_stroke, &s_hook->m_currentKey, &s_hook->m_pressed);
     } else if (interception_is_keyboard(s_device)) {
+        if (!s_keyboardDevice) {
+            s_keyboardDevice = std::make_unique<InterceptionDevice>(s_device);
+        }
         InterceptionKeyStroke& keyStroke = *(InterceptionKeyStroke*) &s_stroke;
         s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(keyStroke);
         s_hook->m_pressed = interceptionGetIsPressed(keyStroke);
@@ -410,7 +422,7 @@ int Condition::call() {
 }
 
 Condition::Condition(Keys keys) : Condition() {
-    if (!keys.hasFlag(Keys::Send)) {
+    if (!keys.hasFlag(Keys::NoMute)) {
         m_flags.insert(Keys::Mute);
     }
     m_pressCode = s_hook->getPressCode(keys);
