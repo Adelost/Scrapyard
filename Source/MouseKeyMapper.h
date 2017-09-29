@@ -42,9 +42,9 @@ public:
         auto& states = m_scrollStates;
         return states.count(code) != 0;
     }
-    void getScrollState(ScanCode code) {
+    ScrollState getScrollState(ScanCode code) {
         auto& states = m_scrollStates;
-        ScrollState state = states[code];
+        return states[code];
     }
     bool hasCodeFor(int state);
     void getCode(int code, Key* key, bool* pressed);

@@ -1,7 +1,7 @@
+#include <interception.h>
 #include "MouseKeyMapper.h"
 
 namespace kh {
-
 
 
 MouseKeyMapper::MouseKeyMapper() {
@@ -26,7 +26,7 @@ void MouseKeyMapper::add(ScanCode code, int pressState, int releaseState) {
 
 void MouseKeyMapper::addScroll(ScanCode code, int state, int roll) {
     auto& rolls = m_scrollRolls;
-    if(!rolls.count(state)){
+    if (!rolls.count(state)) {
         rolls[state] = std::unordered_map<int, ScanCode>();
     }
     rolls[state][roll] = code;
@@ -62,11 +62,15 @@ bool MouseKeyMapper::hasStateFor(ScanCode code) {
     }
     return false;
 }
-void MouseKeyMapper::getState(ScanCode code, bool pressed, InterceptionMouseStroke* stroke){
-    if (pressed && m_pressStates.count(code)) {
-        stroke->state = (unsigned short)m_pressStates[code];
+void MouseKeyMapper::getState(ScanCode code, bool pressed, InterceptionMouseStroke* stroke) {
+    if (hasScrollStateFor(code)) {
+        auto state = getScrollState(code);
+        stroke->state = (unsigned short)state.state;
+        stroke->rolling = (unsigned short)state.roll;
+    } else if (pressed && m_pressStates.count(code)) {
+        stroke->state = (unsigned short) m_pressStates[code];
     } else if (!pressed && m_releaseStates.count(code)) {
-        stroke->state = (unsigned short)m_releaseStates[code];
+        stroke->state = (unsigned short) m_releaseStates[code];
     }
 }
 }

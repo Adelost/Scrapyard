@@ -56,9 +56,13 @@ void interceptionGetMouseStroke(InterceptionMouseStroke* mouseStroke, Key* key, 
         throw Exceptions::UnkownReading();
     }
     if (s_mouseKeyMapper.hasScrollCodeFor(state, roll)) {
-        throw Exceptions::UnkownReading();
+        *key = s_mouseKeyMapper.getScrollCode(state, roll);
+        key->setEvent(true);
+        *isPressed = true;
+        std::cout << "scroll reading " << std::endl;
+    } else {
+        s_mouseKeyMapper.getCode(state, key, isPressed);
     }
-    s_mouseKeyMapper.getCode(state, key, isPressed);
 }
 
 bool isMouseKey(Key key) {
@@ -77,6 +81,8 @@ void interceptionSend(Key key, bool pressed) {
             InterceptionMouseStroke stroke = {0};
             s_mouseKeyMapper.getState(key.getCode(), pressed, &stroke);
             interception_send(s_context, *s_mouseDevice, (InterceptionStroke const*) &stroke, 1);
+        } else {
+            std::cout << "No mouse device yet detected" << std::endl;
         }
     }
     if (isKeyboardKey(key)) {
@@ -91,6 +97,8 @@ void interceptionSend(Key key, bool pressed) {
             stroke.code = (unsigned short) code;
             stroke.state = (unsigned short) state;
             interception_send(s_context, *s_keyboardDevice, (InterceptionStroke const*) &stroke, 1);
+        } else{
+            std::cout << "No keyboard device yet detected" << std::endl;
         }
     }
 }
@@ -221,11 +229,13 @@ void KeyHook::readInput() const {
     if (interception_is_mouse(s_device)) {
         if (!s_mouseDevice) {
             s_mouseDevice = std::make_unique<InterceptionDevice>(s_device);
+            std::cout << "Mouse device detected" << std::endl;
         }
         interceptionGetMouseStroke((InterceptionMouseStroke*) &s_stroke, &s_hook->m_currentKey, &s_hook->m_pressed);
     } else if (interception_is_keyboard(s_device)) {
         if (!s_keyboardDevice) {
             s_keyboardDevice = std::make_unique<InterceptionDevice>(s_device);
+            std::cout << "Keyboard device detected" << std::endl;
         }
         InterceptionKeyStroke& keyStroke = *(InterceptionKeyStroke*) &s_stroke;
         s_hook->m_currentKey = (ScanCode) interceptionGetCurrentKey(keyStroke);
@@ -257,15 +267,20 @@ void KeyHook::spoof(Key key, bool pressed) {
 
 void KeyHook::preScript() {
     m_callPath = "";
-    if (m_pressed) {
-        m_hardwareKeys.insert(m_currentKey);
+    if(m_currentKey.isEvent()) {
+        send(m_currentKey, false);
     } else {
-        m_hardwareKeys.erase(m_currentKey);
-        if (containsKey(m_modStash, m_currentKey)) {
-            eraseKey(m_modStash, m_currentKey);
-            mute(m_currentKey);
+        if (m_pressed) {
+            m_hardwareKeys.insert(m_currentKey);
+        } else {
+            m_hardwareKeys.erase(m_currentKey);
+            if (containsKey(m_modStash, m_currentKey)) {
+                eraseKey(m_modStash, m_currentKey);
+                mute(m_currentKey);
+            }
         }
     }
+
 }
 
 void KeyHook::insertKeys(std::set<Key> keys) {

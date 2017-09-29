@@ -9,6 +9,9 @@ class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
         static bool enable = true;
+        on(MouseForward, ArrowUp);
+        on(MouseBack, ArrowDown);
+
         on(isWindow("Company Of Heroes 2"), Action([&] {
             on(Enter - Keys::NoMute, enable);
             on(Ctrl + Enter, enable);
@@ -25,9 +28,9 @@ protected:
         }));
     }
     void init() {
-//        every(100, [&] {
+//        every(1000, [&] {
 //            std::cout << sense.pixel(sense.cursor()).toHex() << std::endl;
-////            send(Q);
+//            send(Q);
 //        });
     }
 public:

@@ -25,6 +25,12 @@ public:
     ScanCode getCode() const {
         return m_code;
     }
+    void setEvent(bool state) {
+        m_event = state;
+    }
+    bool isEvent() const {
+        return m_event;
+    }
     std::vector<ScanCode> getAlternatives() const {
         return m_alternatives;
     }
@@ -47,6 +53,7 @@ public:
     }
 
 private:
+    bool m_event = false;
     ScanCode m_code;
     std::vector<ScanCode> m_alternatives;
 };
@@ -197,5 +204,10 @@ public:
     Key MouseMiddle = ScanCode::MouseMiddle;
     Key MouseForward = ScanCode::MouseForward;
     Key MouseBack = ScanCode::MouseBack;
+
+    Key MouseScrollDown = ScanCode::MouseScrollDown;
+    Key MouseScrollUp = ScanCode::MouseScrollUp;
+    Key MouseTiltLeft = ScanCode::MouseTiltLeft;
+    Key MouseTiltRight = ScanCode::MouseTiltRight;
 };
 }
