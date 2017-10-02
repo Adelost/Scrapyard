@@ -226,6 +226,7 @@ void KeyHook::initHook() {
     }
 }
 void KeyHook::readInput() const {
+#ifdef _WIN32_
     if (interception_is_mouse(s_device)) {
         if (!s_mouseDevice) {
             s_mouseDevice = std::make_unique<InterceptionDevice>(s_device);
@@ -242,6 +243,7 @@ void KeyHook::readInput() const {
         s_hook->m_pressed = interceptionGetIsPressed(keyStroke);
     }
     s_hook->m_window = getActiveWindow();
+#endif
 }
 
 void KeyHook::exitThreads() const {

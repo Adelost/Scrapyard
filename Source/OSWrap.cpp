@@ -14,22 +14,33 @@ std::string getActiveWindow() {
     return "";
 #endif
 }
-Point getActiveWindowPos() {
-    RECT rect;
-    GetWindowRect(GetForegroundWindow(), &rect);
-    return {rect.left, rect.top};
-}
-Point getCursorPos() {
-    POINT point;
-    GetCursorPos(&point);
-    return {point.x, point.y};
-}
+
 Point mapToWindow(Point& globalPoint, Point& windowPos) {
     return globalPoint - windowPos;
 }
 Point mapToGlobal(Point& windowPoint, Point& windowPos) {
     return windowPoint + windowPos;
 }
+
+Point getActiveWindowPos() {
+#ifdef _WIN32_
+    RECT rect;
+    GetWindowRect(GetForegroundWindow(), &rect);
+    return {rect.left, rect.top};
+#else
+    return {0, 0};
+#endif
+}
+Point getCursorPos() {
+#ifdef _WIN32_
+    POINT point;
+    GetCursorPos(&point);
+    return {point.x, point.y};
+#else
+    return {0, 0};
+#endif
+}
+
 Sense::Sense() {
 }
 Sense::~Sense() {
@@ -38,6 +49,7 @@ Sense::~Sense() {
     }
 }
 Color Sense::pixel(Point point) {
+#ifdef _WIN32_
     std::cout << "Point: " << point.x << " " << point.y << std::endl;
     point = mapToGlobal(point, m_window);
 
@@ -47,6 +59,9 @@ Color Sense::pixel(Point point) {
     int b = GetBValue(color);
     std::cout << "Beforehex: " << r << " " << g << " " << b << std::endl;
     return {r, g, b};
+#else
+    return {0, 0, 0};
+#endif
 }
 Point Sense::window() {
     return m_window;
@@ -56,14 +71,19 @@ Point Sense::cursor() {
 }
 void Sense::init() {
     m_inited = true;
+#ifdef _WIN32_
     m_hwnd = GetForegroundWindow();
     m_dc = GetDC(nullptr);
+#endif
     m_window = getActiveWindowPos();
     auto cursorGlobal = getCursorPos();
     m_cursor = mapToWindow(cursorGlobal, m_window);
 }
 void Sense::clear() {
+#ifdef _WIN32_
     ReleaseDC(NULL, m_dc);
+#endif
     m_inited = false;
 }
+
 }

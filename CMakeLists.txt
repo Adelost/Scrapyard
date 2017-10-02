@@ -3,6 +3,10 @@ project(AberrantEngine)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "-static-libgcc -static-libstdc++")
 
+if (NOT WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif ()
+
 set(SOURCES
         Source/main.cpp
         Source/Utils/Assert.cpp
@@ -42,6 +46,7 @@ set(SOURCES
         Source/Utils/__internal__/_WindowsConsole.cpp
         Source/Utils/__internal__/_WindowsConsole.h
         #        Source/ScanCodes.cpp
+        Source/EnumClassHash.h
         Source/MouseKeyMapper.h
         Source/MouseKeyMapper.cpp
         Source/OSWrap.h
@@ -60,7 +65,11 @@ link_directories(Libs/Interception/x64)
 if (WIN32)
     add_definitions(-D_WIN32_)
     set(LIBS interception.lib)
-endif (WIN32)
+elseif(APPLE)
+    add_definitions(-D_APPLE_)
+elseif(UNIX AND NOT APPLE)
+    add_definitions(-D_LINUX_)
+endif ()
 
 add_executable(AberrantEngine ${SOURCES})
 target_link_libraries(AberrantEngine ${LIBS})

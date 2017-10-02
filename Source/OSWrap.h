@@ -1,7 +1,10 @@
 #pragma once
 
 #include <sstream>
+
+#ifdef _WIN32_
 #include "Windows.h"
+#endif
 
 namespace kh {
 
@@ -33,10 +36,12 @@ inline Point operator-(Point& left, Point& right) {
 
 std::string getActiveWindow();
 
+#ifdef _WIN32_
 Point getActiveWindowPos();
 Point getCursorPos();
 Point mapToWindow(Point& globalPoint, Point& windowPos);
 Point mapToGlobal(Point& windowPoint, Point& windowPos);
+#endif
 
 class Sense {
 public:
@@ -50,8 +55,10 @@ public:
 
 private:
     bool m_inited = false;
+#ifdef _WIN32_
     HWND m_hwnd;
     HDC m_dc;
+#endif
     Point m_cursor;
     Point m_window;
 
