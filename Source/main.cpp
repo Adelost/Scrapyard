@@ -9,8 +9,17 @@ class MyKeyHook : public kh::KeyHook {
 protected:
     void script() {
         static bool enable = true;
-        on(MouseForward, ArrowUp);
-        on(MouseBack, ArrowDown);
+        on(MouseScrollDown, ArrowDown);
+        on(MouseScrollUp, ArrowUp);
+        on(MouseTiltLeft, ArrowLeft);
+        on(MouseTiltRight, ArrowRight);
+
+        on(ArrowDown, MouseScrollDown);
+        on(ArrowUp, MouseScrollUp);
+        on(ArrowLeft, MouseTiltLeft);
+        on(ArrowRight, MouseTiltRight);
+
+
 
         on(isWindow("Company Of Heroes 2"), Action([&] {
             on(Enter - Keys::NoMute, enable);
@@ -66,30 +75,6 @@ int main() {
 
 //    std::thread t1(foo);
 //    t1.join();
-
-
-
-
-//    FARPROC pGetPixel;
-//    HINSTANCE _hGDI = LoadLibrary("gdi32.dll");
-//    if(_hGDI)
-//    {
-//        pGetPixel = GetProcAddress(_hGDI, "GetPixel");
-//        HDC _hdc = GetDC(NULL);
-//        if(_hdc)
-//        {
-//            POINT _cursor;
-//            GetCursorPos(&_cursor);
-//            COLORREF _color = (*pGetPixel) (_hdc, _cursor.x, _cursor.y);
-//            int _red = GetRValue(_color);
-//            int _green = GetGValue(_color);
-//            int _blue = GetBValue(_color);
-//
-//            printf("Red: 0x%02x\n", _red);
-//            printf("Green: 0x%02x\n", _green);
-//            printf("Blue: 0x%02x\n", _blue);
-//        }
-//        FreeLibrary(_hGDI);
 
     return 0;
 }

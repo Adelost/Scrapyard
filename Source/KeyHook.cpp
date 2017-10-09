@@ -199,11 +199,9 @@ void KeyHook::start() {
         initHook();
         try {
             readInput();
-            s_hook->sense.init();
-            s_hook->preScript();
-            s_hook->script();
-            s_hook->postScript();
-            s_hook->sense.clear();
+            sense.init();
+            runScript();
+            sense.clear();
             if (m_exiting) {
                 break;
             }
@@ -217,6 +215,17 @@ void KeyHook::start() {
     std::cout << "exit main thread" << std::endl;
     interception_destroy_context(s_context);
 #endif
+}
+void KeyHook::runScript() {
+    preScript();
+    script();
+    postScript();
+    if (m_currentKey.isEvent()) {
+        m_pressed = false;
+        preScript();
+        script();
+        postScript();
+    }
 }
 void KeyHook::initHook() {
     s_hook = this;
@@ -260,29 +269,26 @@ void KeyHook::spoof(Key key, bool pressed) {
     m_currentKey = key;
     m_pressed = pressed;
     m_window = "Spoof";
-    preScript();
-    script();
-    postScript();
+    runScript();
     m_debug = false;
 }
 
 
 void KeyHook::preScript() {
     m_callPath = "";
-    if(m_currentKey.isEvent()) {
-        send(m_currentKey, false);
+    if (m_pressed) {
+        m_hardwareKeys.insert(m_currentKey);
     } else {
-        if (m_pressed) {
-            m_hardwareKeys.insert(m_currentKey);
-        } else {
-            m_hardwareKeys.erase(m_currentKey);
-            if (containsKey(m_modStash, m_currentKey)) {
-                eraseKey(m_modStash, m_currentKey);
-                mute(m_currentKey);
-            }
-        }
+        registerReleased(m_currentKey);
     }
+}
 
+void KeyHook::registerReleased(Key key) {
+    m_hardwareKeys.erase(key);
+    if (containsKey(m_modStash, key)) {
+        eraseKey(m_modStash, key);
+        mute(key);
+    }
 }
 
 void KeyHook::insertKeys(std::set<Key> keys) {
@@ -318,6 +324,7 @@ void KeyHook::postScript() {
     if (unmuted && isStashedMods()) {
         unstashMods();
     }
+
 }
 
 void KeyHook::sendBuffer() {

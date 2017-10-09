@@ -294,6 +294,8 @@ protected:
 
     void readInput() const;
     void initHook();
+    void registerReleased(Key key);
+    void runScript();
 };
 
 }
